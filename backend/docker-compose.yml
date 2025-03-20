@@ -1,0 +1,25 @@
+name: depression_diagnosis_system
+services:
+  db:
+    image: postgres:latest
+    container_name: dds_db
+    restart: no
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: dds_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer
+    container_name: dds_adminer
+    restart: no
+    ports:
+      - "8081:8080"
+
+volumes:
+  db_data:
+  

@@ -1,0 +1,10 @@
+^C:\USERS\HEZRON JAHMIA\DOCUMENTS\SOFTWARE DEVELOPMENT\DEPRESSION-DIAGNOSIS-SYSTEM\FRONTEND\BUILD\WINDOWS\X64\CMAKEFILES\CC4362D89D47CFCC0EA4DE90E2864DE3\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" "-SC:/Users/Hezron Jahmia/Documents/Software Development/depression-diagnosis-system/frontend/windows" "-BC:/Users/Hezron Jahmia/Documents/Software Development/depression-diagnosis-system/frontend/build/windows/x64" --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file "C:/Users/Hezron Jahmia/Documents/Software Development/depression-diagnosis-system/frontend/build/windows/x64/frontend.sln"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

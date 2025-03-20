@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\Hezron Jahmia\Documents\Software Development\depression-diagnosis-system\frontend\build\windows\x64\CMakeFiles\cc4362d89d47cfcc0ea4de90e2864de3\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{163844D1-0BEF-36A0-A7B1-644EAE453D53}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
