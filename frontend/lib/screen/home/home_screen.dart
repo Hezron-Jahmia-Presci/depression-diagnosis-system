@@ -16,8 +16,25 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final PsychiatristService _psychiatristService = PsychiatristService();
   Widget _selectedScreen = DashboardScreen();
   bool _isLoading = false;
+  int _selectedIndex = 0;
+
+  void _handleLogout() async {
+    final loggedOut = await _psychiatristService.logoutPsychiatrist();
+
+    if (loggedOut && mounted) {
+      Navigator.pushReplacementNamed(context, '/login');
+    }
+  }
+
+  void _navigateToViewPsychiatristDetailsScreen() async {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => PsychiatristDetailsScreen()),
+    );
+  }
 
   void _navigateTo(Widget screen) {
     setState(() {
@@ -27,30 +44,99 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _onBottomNavItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+      switch (index) {
+        case 0:
+          _selectedScreen = DashboardScreen();
+          break;
+        case 1:
+          _selectedScreen = PatientScreen();
+          break;
+        case 2:
+          _selectedScreen = SessionScreen();
+          break;
+        default:
+          _selectedScreen = DashboardScreen();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isMobileOrTablet = MediaQuery.of(context).size.width < 1128;
 
     return Scaffold(
-      body: Row(
-        children: [
-          Expanded(
-            flex: 3,
-            child: Sidebar(
-              onItemSelected: _navigateTo,
-              colorScheme: colorScheme,
-            ),
-          ),
-          const SizedBox(width: 21),
-          Expanded(
-            flex: 7,
-            child:
-                _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _selectedScreen,
-          ),
-        ],
-      ),
+      appBar:
+          isMobileOrTablet
+              ? AppBar(
+                automaticallyImplyLeading: false,
+                actions: [
+                  IconButton(
+                    icon: Icon(Icons.person),
+                    onPressed: _navigateToViewPsychiatristDetailsScreen,
+                  ),
+                  SizedBox(width: 13),
+                  IconButton(
+                    icon: Icon(Icons.logout),
+                    onPressed: _handleLogout,
+                  ),
+                ],
+              )
+              : null,
+      body:
+          isMobileOrTablet
+              ? _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _selectedScreen
+              : Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: Sidebar(
+                      onItemSelected: _navigateTo,
+                      colorScheme: colorScheme,
+                    ),
+                  ),
+                  const SizedBox(width: 21),
+                  Expanded(
+                    flex: 7,
+                    child:
+                        _isLoading
+                            ? const Center(child: CircularProgressIndicator())
+                            : _selectedScreen,
+                  ),
+                ],
+              ),
+      bottomNavigationBar:
+          isMobileOrTablet
+              ? BottomNavigationBar(
+                currentIndex: _selectedIndex,
+                onTap: _onBottomNavItemTapped,
+                items: <BottomNavigationBarItem>[
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.dashboard_outlined),
+                    activeIcon: Icon(Icons.dashboard_rounded),
+                    backgroundColor: colorScheme.primary,
+                    label: 'Dashboard',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.person_2_outlined),
+                    activeIcon: Icon(Icons.person_2_rounded),
+                    backgroundColor: colorScheme.primary,
+                    label: 'Patients',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.event_outlined),
+                    activeIcon: Icon(Icons.event_rounded),
+                    backgroundColor: colorScheme.primary,
+                    label: 'Sessions',
+                  ),
+                ],
+              )
+              : null,
     );
   }
 }
@@ -122,7 +208,7 @@ class _SidebarState extends State<Sidebar> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: widget.colorScheme.onPrimary,
+      color: widget.colorScheme.surfaceContainer,
       padding: const EdgeInsets.symmetric(vertical: 21, horizontal: 34),
       child: Column(
         children: [

@@ -113,8 +113,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   horizontal: 21,
                   vertical: 13,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                child: ListView(
                   children: [
                     Row(
                       children: [
@@ -187,7 +186,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Icon(icon, size: 40, color: colorScheme.primary),
+          Icon(icon, size: 40, color: Colors.blue),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -203,7 +202,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: colorScheme.primary,
+                  color: Colors.green,
                 ),
               ),
             ],
@@ -225,11 +224,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return SizedBox(
       height: MediaQuery.sizeOf(context).height / 2.5,
-      child: Card(
-        elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      child: ReusableCardWidget(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.symmetric(horizontal: 13, vertical: 24),
           child: LineChart(
             LineChartData(
               minX: 0,
@@ -238,11 +235,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 LineChartBarData(
                   spots: spots,
                   isCurved: true,
-                  color: colorScheme.primary,
+
                   barWidth: 3,
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.red,
+                      Colors.orange,
+                      Colors.blue,
+                      Colors.lightGreen,
+                      Colors.green,
+                    ],
+
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   belowBarData: BarAreaData(
                     show: true,
-                    color: colorScheme.secondary.withAlpha(70),
+                    color: colorScheme.primaryContainer.withAlpha(100),
                   ),
                   dotData: FlDotData(show: true),
                 ),

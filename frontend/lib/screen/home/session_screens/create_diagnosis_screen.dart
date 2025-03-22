@@ -29,12 +29,31 @@ class _CreateDiagnosisScreenState extends State<CreateDiagnosisScreen> {
   bool _isLoading = true;
   bool _hasError = false;
   bool _isSubmitting = false;
-  String _selectedStatus = 'ongoing';
+  int _selectedStatus = 4;
 
   @override
   void initState() {
     super.initState();
     _fetchPhq9Questions();
+  }
+
+  final Map<int, String> statusMap = {4: 'ongoing', 1: 'cancelled'};
+
+  void _handleStatusChange(int? newValue) async {
+    if (newValue != null) {
+      setState(() {
+        _selectedStatus = newValue;
+      });
+
+      String newStatus = statusMap[newValue]!;
+      if (newStatus == 'cancelled') {
+        await _sessionService.updateSessionStatus(
+          widget.sessionID,
+          'cancelled',
+        );
+        _navigateToSessionDetailsScreen();
+      }
+    }
   }
 
   Future<void> _fetchPhq9Questions() async {
@@ -142,7 +161,15 @@ class _CreateDiagnosisScreenState extends State<CreateDiagnosisScreen> {
                   key: _formKey,
                   child: Row(
                     children: [
-                      Expanded(flex: 3, child: _buildQuestionsList()),
+                      Expanded(
+                        flex: 3,
+                        child: Column(
+                          children: [
+                            SizedBox(height: 180, child: _buildColorKey()),
+                            Expanded(child: _buildQuestionsList()),
+                          ],
+                        ),
+                      ),
                       const SizedBox(width: 55),
                       Expanded(flex: 2, child: _buildNotesSection()),
                     ],
@@ -168,9 +195,8 @@ class _CreateDiagnosisScreenState extends State<CreateDiagnosisScreen> {
       centerTitle: true,
       leading: IconButton(
         onPressed: () => Navigator.pop(context),
-        icon: Icon(Icons.arrow_back_ios_new_rounded),
+        icon: const Icon(Icons.arrow_back_ios_new_rounded),
       ),
-
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(50),
         child: Padding(
@@ -184,23 +210,68 @@ class _CreateDiagnosisScreenState extends State<CreateDiagnosisScreen> {
               ),
               ReusableRadioButtonWidget(
                 selectedStatus: _selectedStatus,
-                options: ['ongoing', 'cancelled'],
+                options: [4, 1],
+                statusMap: statusMap,
                 onChanged: (newValue) async {
-                  if (newValue != null) {
-                    setState(() => _selectedStatus = newValue);
-                    if (newValue == 'cancelled') {
-                      await _sessionService.updateSessionStatus(
-                        widget.sessionID,
-                        'cancelled',
-                      );
-                      _navigateToSessionDetailsScreen();
-                    }
-                  }
+                  _handleStatusChange(newValue);
                 },
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildColorKey() {
+    final List<String> labels = [
+      'Strongly Disagree',
+      'Disagree',
+      'Neutral',
+      'Agree',
+      'Strongly Agree',
+    ];
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10.0),
+      child: Column(
+        children: [
+          Center(
+            child: Text(
+              'Choose how accurately each statement reflects the patient',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ),
+          SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: List.generate(labels.length, (i) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 32.8,
+                      height: 32.8,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: colorScale[i].withAlpha(55),
+                        border: Border.all(
+                          color: colorScale[i].withAlpha(155),
+                          width: 2.0,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 24),
+                    Text(
+                      labels[i],
+                      style: TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ),
+        ],
       ),
     );
   }
@@ -212,6 +283,7 @@ class _CreateDiagnosisScreenState extends State<CreateDiagnosisScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 21),
       child: ListView.builder(
+        shrinkWrap: true,
         itemCount: _phq9Questions?.length ?? 0,
         itemBuilder: (context, index) => _buildQuestionCard(index),
       ),
@@ -219,53 +291,36 @@ class _CreateDiagnosisScreenState extends State<CreateDiagnosisScreen> {
   }
 
   Widget _buildQuestionCard(int index) {
-    return Card(
-      elevation: 3,
-      margin: const EdgeInsets.symmetric(vertical: 8),
+    return ReusableCardWidget(
       child: Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.symmetric(vertical: 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               "${index + 1}. ${_phq9Questions?[index]['question'] ?? 'Unknown Question'}",
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 16),
             ),
-            const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(
-                5,
-                (i) => _buildRadioOption(index, i + 1),
-              ),
+            const SizedBox(height: 24),
+            ReusableRadioButtonWidget(
+              selectedStatus:
+                  (_phq9Responses?.length ?? 0) > index
+                      ? _phq9Responses![index]
+                      : 0,
+              options: [1, 2, 3, 4, 5],
+              onChanged: (newValue) {
+                setState(() {
+                  if (_phq9Responses == null ||
+                      _phq9Responses!.length != _phq9Questions!.length) {
+                    _phq9Responses = List.filled(_phq9Questions!.length, 0);
+                  }
+                  _phq9Responses![index] = newValue!;
+                });
+              },
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildRadioOption(int index, int value) {
-    return Row(
-      children: [
-        Radio<int>(
-          value: value,
-          groupValue:
-              (_phq9Responses?.length ?? 0) > index
-                  ? _phq9Responses![index]
-                  : -1,
-          onChanged: (newValue) {
-            setState(() {
-              if (_phq9Responses == null ||
-                  _phq9Responses!.length != _phq9Questions!.length) {
-                _phq9Responses = List.filled(_phq9Questions!.length, 1);
-              }
-              _phq9Responses![index] = newValue!;
-            });
-          },
-        ),
-        Text("$value"),
-      ],
     );
   }
 

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../service/patient_service.dart' show PatientService;
 import '../../../widget/widget_exporter.dart' show ReusableCardWidget;
-import '../home_screen.dart' show HomeScreen;
 import 'patient_details_creen.dart' show PatientDetailsScreen;
 import 'register_patient_screen.dart' show RegisterPatientScreen;
 
@@ -63,13 +62,6 @@ class _PatientScreenState extends State<PatientScreen> {
     );
   }
 
-  void _navigateToDashboardDetailsScreen() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const HomeScreen()),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -80,10 +72,6 @@ class _PatientScreenState extends State<PatientScreen> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
-        leading: IconButton(
-          onPressed: _navigateToDashboardDetailsScreen,
-          icon: Icon(Icons.arrow_back_ios_new_rounded),
-        ),
       ),
       body:
           _isLoading

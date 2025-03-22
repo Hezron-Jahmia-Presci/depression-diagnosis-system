@@ -162,6 +162,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -215,7 +216,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                               ),
                             ),
                             Divider(),
-                            Expanded(child: _buildPhq9Responses()),
+                            Expanded(child: _buildPhq9Responses(colorScheme)),
                           ],
                         ),
                       ),
@@ -278,51 +279,104 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
       crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        Text("📅 Date: ${sessionData['date'] ?? 'Unknown'}"),
-        const SizedBox(width: 10),
+        Text(
+          "📅 Date: ${sessionData['date'] ?? 'Unknown'}",
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+
         Text(
           "🟢 Status: ${sessionData['status'] ?? 'Unknown'}",
           style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
             color:
                 sessionData['status'] == "completed"
                     ? Colors.green
                     : Colors.orange,
           ),
         ),
-        const SizedBox(height: 10),
-        Text("👩‍⚕️ Psychiatrist: $psychiatristName"),
-        const SizedBox(height: 10),
-        Text("🧑‍🦱 Patient: $patientName"),
+
+        Text(
+          "👩‍⚕️ Psychiatrist: $psychiatristName",
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+
+        Text(
+          "🧑‍🦱 Patient: $patientName",
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
       ],
     );
   }
 
-  Widget _buildPhq9Responses() {
+  Widget _buildPhq9Responses(ColorScheme colorScheme) {
     if (_phq9QuestionsAndResponses == null ||
         _phq9QuestionsAndResponses!.isEmpty) {
       return const Center(child: Text("No PHQ-9 responses recorded."));
     }
 
+    final Map<int, Color> responseColors = {
+      1: Colors.red,
+      2: Colors.orange,
+      3: Colors.grey,
+      4: Colors.lightGreen,
+      5: Colors.green,
+    };
+
+    final Map<int, String> responseLabels = {
+      1: 'Strongly Disagree',
+      2: 'Disagree',
+      3: 'Neutral',
+      4: 'Agree',
+      5: 'Strongly Agree',
+    };
+
     return ListView.builder(
       itemCount: _phq9QuestionsAndResponses!.length,
       itemBuilder: (context, index) {
         final phq9QuestionAndAnswer = _phq9QuestionsAndResponses![index];
+        final int response = phq9QuestionAndAnswer['responses'] ?? 0;
+        final responseColor = responseColors[response] ?? Colors.grey;
+        final responseLabel = responseLabels[response] ?? 'No Response';
+
         return ReusableCardWidget(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "🔹 ${phq9QuestionAndAnswer['question'] ?? 'Unknown Question'}",
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "${phq9QuestionAndAnswer['question'] ?? 'Unknown Question'}",
+                  style: const TextStyle(fontSize: 16),
                 ),
-              ),
-              Text(
-                "       Selected Response: ${phq9QuestionAndAnswer['responses'] ?? 'No Response'}",
-                style: const TextStyle(fontSize: 16),
-              ),
-            ],
+                Divider(color: colorScheme.primaryContainer),
+                SizedBox(height: 24),
+                Row(
+                  children: [
+                    Container(
+                      width: 32.8,
+                      height: 32.8,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: responseColor.withAlpha(55),
+                        border: Border.all(
+                          color: responseColor.withAlpha(155),
+                          width: 2.0,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      responseLabel,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         );
       },
