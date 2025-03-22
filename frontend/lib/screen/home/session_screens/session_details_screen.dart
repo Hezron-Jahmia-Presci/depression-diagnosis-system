@@ -275,35 +275,61 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
     final patientName =
         "${sessionData['Patient']?['first_name'] ?? 'Unknown'} ${sessionData['Patient']?['last_name'] ?? ''}";
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    return Table(
+      border: TableBorder.all(
+        color: Colors.transparent, // Border color
+        width: 1.0,
+      ),
       children: [
-        Text(
-          "📅 Date: ${sessionData['date'] ?? 'Unknown'}",
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-        ),
+        TableRow(
+          children: [
+            Center(
+              child: Text(
+                "📅 Date: ${sessionData['date'] ?? 'Unknown'}",
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
 
-        Text(
-          "🟢 Status: ${sessionData['status'] ?? 'Unknown'}",
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color:
-                sessionData['status'] == "completed"
-                    ? Colors.green
-                    : Colors.orange,
-          ),
+            Center(
+              child: Text(
+                "🟢 Status: ${sessionData['status'] ?? 'Unknown'}",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color:
+                      sessionData['status'] == "completed"
+                          ? Colors.green
+                          : Colors.orange,
+                ),
+              ),
+            ),
+          ],
         ),
+        TableRow(
+          children: [
+            Center(
+              child: Text(
+                "👩‍⚕️ Psychiatrist: $psychiatristName",
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
 
-        Text(
-          "👩‍⚕️ Psychiatrist: $psychiatristName",
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-        ),
-
-        Text(
-          "🧑‍🦱 Patient: $patientName",
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            Center(
+              child: Text(
+                "🧑‍🦱 Patient: $patientName",
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
