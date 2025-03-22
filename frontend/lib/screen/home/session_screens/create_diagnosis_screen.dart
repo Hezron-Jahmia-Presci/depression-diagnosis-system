@@ -59,10 +59,10 @@ class _CreateDiagnosisScreenState extends State<CreateDiagnosisScreen> {
   Future<void> _fetchPhq9Questions() async {
     try {
       final questions = await _phq9service.getAllQuestions();
-
       if (questions != null && questions.isNotEmpty) {
         setState(() {
           _phq9Questions = questions;
+          _phq9Responses = List.filled(questions.length, 1);
           _isLoading = false;
         });
       } else {
@@ -303,19 +303,14 @@ class _CreateDiagnosisScreenState extends State<CreateDiagnosisScreen> {
             ),
             const SizedBox(height: 24),
             ReusableRadioButtonWidget(
-              selectedStatus:
-                  (_phq9Responses?.length ?? 0) > index
-                      ? _phq9Responses![index]
-                      : 0,
+              selectedStatus: _phq9Responses![index],
               options: [1, 2, 3, 4, 5],
               onChanged: (newValue) {
-                setState(() {
-                  if (_phq9Responses == null ||
-                      _phq9Responses!.length != _phq9Questions!.length) {
-                    _phq9Responses = List.filled(_phq9Questions!.length, 0);
-                  }
-                  _phq9Responses![index] = newValue!;
-                });
+                if (newValue != null) {
+                  setState(() {
+                    _phq9Responses![index] = newValue;
+                  });
+                }
               },
             ),
           ],

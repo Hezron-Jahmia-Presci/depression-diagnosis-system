@@ -361,7 +361,9 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
       itemCount: _phq9QuestionsAndResponses!.length,
       itemBuilder: (context, index) {
         final phq9QuestionAndAnswer = _phq9QuestionsAndResponses![index];
-        final int response = phq9QuestionAndAnswer['responses'] ?? 0;
+        final int response =
+            int.tryParse(phq9QuestionAndAnswer['responses'].toString()) ?? 0;
+
         final responseColor = responseColors[response] ?? Colors.grey;
         final responseLabel = responseLabels[response] ?? 'No Response';
 
