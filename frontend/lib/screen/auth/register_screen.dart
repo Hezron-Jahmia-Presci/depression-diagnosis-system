@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../service/psychiatrist_service.dart' show PsychiatristService;
+
 import '../../widget/widget_exporter.dart';
-import 'login/login_screen.dart' show LoginScreen;
+import '../../service/psychiatrist_service.dart' show PsychiatristService;
+import 'login/psych_login_screen.dart' show PsychLoginScreen;
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -44,7 +45,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (response != null) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          MaterialPageRoute(builder: (context) => const PsychLoginScreen()),
         );
       }
     } catch (e) {
@@ -125,7 +126,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     text: 'Register',
                   ),
                   TextButton(
-                    onPressed: () => Navigator.pushNamed(context, '/login'),
+                    onPressed:
+                        () => Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const PsychLoginScreen(),
+                          ),
+                        ),
                     child: const Text('Already have an account? Login'),
                   ),
                 ],

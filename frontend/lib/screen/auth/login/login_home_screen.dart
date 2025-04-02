@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../widget/widget_exporter.dart' show ReusableCardWidget;
 import 'admin_login_screen.dart' show AdminLoginScreen;
-import 'login_screen.dart' show LoginScreen;
+import 'psych_login_screen.dart' show PsychLoginScreen;
 
 class LoginHomeScreen extends StatefulWidget {
   const LoginHomeScreen({super.key});
@@ -12,16 +12,16 @@ class LoginHomeScreen extends StatefulWidget {
 
 class _LoginHomeScreenState extends State<LoginHomeScreen> {
   void _loginAsAdmin() {
-    Navigator.pushReplacement(
+    Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const AdminLoginScreen()),
     );
   }
 
   void _loginAsPsychiatrist() {
-    Navigator.pushReplacement(
+    Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
+      MaterialPageRoute(builder: (context) => const PsychLoginScreen()),
     );
   }
 

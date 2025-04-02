@@ -51,11 +51,11 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _handleLogout() async {
+  Future<void> _handleLogout() async {
     final loggedOut = await _psychiatristService.logoutPsychiatrist();
 
     if (loggedOut && mounted) {
-      Navigator.pushReplacementNamed(context, '/login');
+      Navigator.pushReplacementNamed(context, '/loginHome');
     }
   }
 

@@ -16,12 +16,15 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _isLoading = false;
+  bool _isSubmitting = false;
 
   Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isLoading = true);
+    if (!_formKey.currentState!.validate()) {
+      setState(() {
+        _isSubmitting = true;
+      });
+      return;
+    }
 
     try {
       final adminResponse = await _adminService.loginAdmin(
@@ -29,22 +32,33 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
         _passwordController.text,
       );
 
-      if (adminResponse != null) {
-        if (!mounted) return;
-        setState(() => _isLoading = false);
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const AdminHomeScreen()),
-        );
-        return;
+      setState(() {
+        _isSubmitting = false;
+      });
+
+      if (adminResponse != null && adminResponse['error'] == null) {
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const AdminHomeScreen()),
+          );
+        }
       } else {
-        if (!mounted) return;
-        setState(() => _isLoading = false);
-        ReusableSnackbarWidget.show(context, 'User does not exist');
+        if (adminResponse != null && adminResponse['error'] != null) {
+          if (mounted) {
+            ReusableSnackbarWidget.show(context, adminResponse['error']);
+          }
+        } else {
+          if (mounted) {
+            ReusableSnackbarWidget.show(context, 'Login failed');
+          }
+        }
       }
     } catch (e) {
-      setState(() => _isLoading = false);
-      ReusableSnackbarWidget.show(context, 'An error occurred: $e');
+      setState(() => _isSubmitting = false);
+      if (mounted) {
+        ReusableSnackbarWidget.show(context, 'An error occurred: $e');
+      }
     }
   }
 
@@ -52,6 +66,17 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          "LOGIN AS AN ADMIN",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: Icon(Icons.arrow_back_ios_new_rounded),
+        ),
+      ),
       body: Form(
         key: _formKey,
         child: Center(
@@ -93,7 +118,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                   ),
                   const SizedBox(height: 24),
                   ReusableButtonWidget(
-                    isLoading: _isLoading,
+                    isLoading: _isSubmitting,
                     onPressed: _login,
                     text: 'Login',
                   ),
