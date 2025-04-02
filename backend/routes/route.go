@@ -8,19 +8,35 @@ import (
 )
 
 func SetupRoutes(router *gin.Engine) {
-	psychHandler := handler.NewPsychiatristHandler()
-	patientHandler := handler.NewPatientHandler()
 	phq9Handler := handler.NewPhq9Handler()
+	adminHandler := handler.NewAdminHandler()
 	sessionHandler := handler.NewSessionHandler()
+	patientHandler := handler.NewPatientHandler()
+	psychHandler := handler.NewPsychiatristHandler()
 	diagnosisHandler := handler.NewDiagnosisHandler()
 	sessionSummaryHandler := handler.NesSessionSummaryHandler()
+
+	// Public Routes (admin)
+	adminRoutes := router.Group("/admin")
+	{
+		adminRoutes.POST("/register", adminHandler.RegisterAdmin)
+		adminRoutes.POST("/login", adminHandler.LoginAdmin)
+		adminRoutes.POST("/logout", adminHandler.LogoutAdmin) 
+	}
+	adminRoutes.Use((middleware.AuthMiddleware()))
+	{
+		adminRoutes.GET("/details", adminHandler.GetAdminDetails)  
+		adminRoutes.PUT("/update", adminHandler.UpdateAdmin)  
+	}
+
 
 	// Public Routes (Psychiatrists)
 	psychRoutes := router.Group("/psych")
 	{
-		psychRoutes.POST("/register", psychHandler.Register)
-		psychRoutes.POST("/login", psychHandler.Login)
-		psychRoutes.POST("/logout", psychHandler.Logout) 
+		psychRoutes.POST("/register", psychHandler.RegisterPsych)
+		psychRoutes.POST("/login", psychHandler.LoginPsych)
+		psychRoutes.POST("/logout", psychHandler.LogoutPsych) 
+		psychRoutes.GET("/all", psychHandler.GetAllPsychiatrists)
 	}
 	psychRoutes.Use((middleware.AuthMiddleware()))
 	{

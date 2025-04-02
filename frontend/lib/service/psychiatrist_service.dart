@@ -140,4 +140,22 @@ class PsychiatristService {
       return {'error': 'An error occurred: $e'};
     }
   }
+
+  Future<List<dynamic>?> getAllPsychiatrists() async {
+    final token = await _getAuthToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/psych/all'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body)['psych'];
+    } else {
+      return [
+        {'error': jsonDecode(response.body)['message']},
+      ];
+    }
+  }
 }

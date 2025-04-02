@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../service/psychiatrist_service.dart' show PsychiatristService;
 import '../../widget/widget_exporter.dart';
-import 'login_screen.dart' show LoginScreen;
+import 'login/login_screen.dart' show LoginScreen;
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -65,7 +65,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             key: _formKey,
             child: ReusableCardWidget(
               child: Column(
-                // crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Center(

@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 
-import 'screen/auth/login_screen.dart' show LoginScreen;
+import 'screen/auth/login/login_home_screen.dart' show LoginHomeScreen;
 import 'screen/auth/register_screen.dart' show RegisterScreen;
-import 'screen/home/home_screen.dart' show HomeScreen;
-import 'screen/home/psychiatrist_screens/psychiatrist_details_screen.dart'
-    show PsychiatristDetailsScreen;
+import 'screen/home/psychiatrist/home_screen.dart' show HomeScreen;
 
 void main() {
   runApp(const MyApp());
@@ -33,10 +31,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       routes: {
-        '/login': (context) => LoginScreen(),
+        '/loginHome': (context) => LoginHomeScreen(),
         '/register': (context) => RegisterScreen(),
         '/psychDashboard': (context) => HomeScreen(),
-        '/psychProfile': (context) => PsychiatristDetailsScreen(),
       },
       debugShowCheckedModeBanner: false,
 
@@ -66,7 +63,7 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
 
     _timer = Timer(const Duration(seconds: 4), () {
-      Navigator.pushNamed(context, '/login');
+      Navigator.pushNamed(context, '/loginHome');
     });
   }
 

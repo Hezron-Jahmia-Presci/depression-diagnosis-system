@@ -15,7 +15,7 @@ func NewPsychiatristController() interfaces.PsychiatristInterface{
 	return &PsychiatristController{}
 }
 
-func (pc * PsychiatristController) Register(firstName, lastName, email, password string) (*model.Psychiatrist, error) {
+func (pc * PsychiatristController) RegisterPsych(firstName, lastName, email, password string) (*model.Psychiatrist, error) {
 	hashedPassword, err := util.HashPassword(password) 
 	if err != nil {
 		return nil, err
@@ -34,7 +34,7 @@ func (pc * PsychiatristController) Register(firstName, lastName, email, password
 	return &psych, nil
 }
 
-func (pc *PsychiatristController) Login(email, password string) (string, error) {
+func (pc *PsychiatristController) LoginPsych(email, password string) (string, error) {
 	var psych model.Psychiatrist
 
 	if err := database.DB.Where("email = ?", email).First(&psych).Error; err != nil {
@@ -53,7 +53,7 @@ func (pc *PsychiatristController) Login(email, password string) (string, error) 
 	return token, nil
 }
 
-func (pc *PsychiatristController) Logout(token string) (error) {
+func (pc *PsychiatristController) LogoutPsych(token string) (error) {
 	if err := middleware.InvalidateToken(token); err != nil {
 		return errors.New("failed to logout")
 	}
@@ -83,4 +83,12 @@ func (pc *PsychiatristController) UpdatePsychiatrist(psychiatristID uint, firstN
 	}
 
 	return &psych, nil
+}
+
+func (pc *PsychiatristController) GetAllPsychiatrists() ([]model.Psychiatrist, error) {
+	var psych []model.Psychiatrist
+	if err := database.DB.Find(&psych).Error; err != nil {
+		return nil, err
+	}
+	return psych, nil
 }

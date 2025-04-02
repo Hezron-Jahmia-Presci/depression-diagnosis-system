@@ -20,7 +20,7 @@ func NewPsychiatristHandler() *PsychiatristHandler {
 	}
 }
 
-func (ph *PsychiatristHandler) Register(c *gin.Context) {
+func (ph *PsychiatristHandler) RegisterPsych(c *gin.Context) {
 	var psych struct {
 		FirstName string `json:"firstName" binding:"required"`
 		LastName  string `json:"lastName" binding:"required"`
@@ -36,7 +36,7 @@ func (ph *PsychiatristHandler) Register(c *gin.Context) {
 		return
 	}
 
-	createdPsych, err := ph.PsychiatristController.Register(psych.FirstName,psych.LastName,psych.Email, psych.Password)
+	createdPsych, err := ph.PsychiatristController.RegisterPsych(psych.FirstName,psych.LastName,psych.Email, psych.Password)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, util.ResponseStructure{
 			Status:  http.StatusInternalServerError,
@@ -56,7 +56,7 @@ func (ph *PsychiatristHandler) Register(c *gin.Context) {
 	})
 }
 
-func (ph *PsychiatristHandler) Login(c *gin.Context){
+func (ph *PsychiatristHandler) LoginPsych(c *gin.Context){
 	var logginRequest struct {
 		Email 	 string `json:"email" binding:"required"`
 		Password string `json:"password" binding:"required"`
@@ -70,7 +70,7 @@ func (ph *PsychiatristHandler) Login(c *gin.Context){
 		return
 	}
 
-	token, err := ph.PsychiatristController.Login(logginRequest.Email, logginRequest.Password) 
+	token, err := ph.PsychiatristController.LoginPsych(logginRequest.Email, logginRequest.Password) 
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, util.ResponseStructure{
 			Status:  http.StatusUnauthorized,
@@ -87,14 +87,14 @@ func (ph *PsychiatristHandler) Login(c *gin.Context){
 
 }
 
-func (ph *PsychiatristHandler) Logout(c *gin.Context) {
+func (ph *PsychiatristHandler) LogoutPsych(c *gin.Context) {
 	token := c.GetHeader("Authorization")
 	if token == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing token"})
 		return
 	}
 
-	err := ph.PsychiatristController.Logout(token)
+	err := ph.PsychiatristController.LogoutPsych(token)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -169,5 +169,17 @@ func (ph *PsychiatristHandler) UpdatePsychiatrist(c *gin.Context) {
 			"email":     psych.Email,
 		},
 	})
+}
 
+func (ph *PsychiatristHandler) GetAllPsychiatrists(c *gin.Context) {
+	psych, err := ph.PsychiatristController.GetAllPsychiatrists()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, util.ResponseStructure{
+			Status:  http.StatusInternalServerError,
+			Message: "error: could not retrieve psychiatrist",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"psych": psych})
 }

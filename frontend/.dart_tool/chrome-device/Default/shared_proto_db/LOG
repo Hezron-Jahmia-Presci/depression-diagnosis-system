@@ -1,5 +1,9 @@
-2025/03/20-13:29:34.235 403c Reusing MANIFEST C:\Users\HEZRON~1\AppData\Local\Temp\flutter_tools.d6766a1b\flutter_tools_chrome_device.797187b4\Default\shared_proto_db/MANIFEST-000001
-2025/03/20-13:29:34.236 403c Recovering log #7
-2025/03/20-13:29:34.239 403c Reusing old log C:\Users\HEZRON~1\AppData\Local\Temp\flutter_tools.d6766a1b\flutter_tools_chrome_device.797187b4\Default\shared_proto_db/000007.log 
-2025/03/20-13:29:34.240 403c Delete type=0 #3
-2025/03/20-13:29:34.240 403c Delete type=0 #4
+2025/04/02-13:08:22.575 b0c Reusing MANIFEST C:\Users\HEZRON~1\AppData\Local\Temp\flutter_tools.87e4700\flutter_tools_chrome_device.ea4e9a0d\Default\shared_proto_db/MANIFEST-000001
+2025/04/02-13:08:22.576 b0c Recovering log #10
+2025/04/02-13:08:22.578 b0c Reusing old log C:\Users\HEZRON~1\AppData\Local\Temp\flutter_tools.87e4700\flutter_tools_chrome_device.ea4e9a0d\Default\shared_proto_db/000010.log 
+2025/04/02-13:08:22.578 b0c Delete type=0 #3
+2025/04/02-13:08:22.578 b0c Delete type=0 #4
+2025/04/02-13:08:22.578 b0c Delete type=0 #7
+2025/04/02-13:08:35.459 6d78 Level-0 table #14: started
+2025/04/02-13:08:35.467 6d78 Level-0 table #14: 138344 bytes OK
+2025/04/02-13:08:35.473 6d78 Delete type=0 #10
