@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/widget/reusable_card_widget.dart';
 
 import '../../../../service/session_service.dart' show SessionService;
+import '../../../../widget/widget_exporter.dart' show ReusableCardWidget;
 import 'create_session_screen.dart' show CreateSessionScreen;
 import 'session_details_screen.dart' show SessionDetailsScreen;
 

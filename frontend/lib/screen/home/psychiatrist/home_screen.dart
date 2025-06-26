@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../../../widget/widget_exporter.dart';
-import '../../../service/psychiatrist_service.dart' show PsychiatristService;
-import 'dashboard_screen.dart' show DashboardScreen;
-import 'patient_screens/patient_screen.dart' show PatientScreen;
-import 'session_screens/session_screen.dart' show SessionScreen;
-import 'psychiatrist_screens/psychiatrist_details_screen.dart'
-    show PsychiatristDetailsScreen;
+import '../../../layout/lob/desktop_layout.dart' show DesktopLayout;
+import '../../../service/psychiatrist_service.dart';
+import '../../../constants/layout_constant.dart' show kDesktopBreakpoint;
+import 'dashboard_screen.dart';
+import 'patient_screens/patient_screen.dart';
+import 'session_screens/session_screen.dart';
+import 'psychiatrist_screens/psychiatrist_details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,11 +17,17 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final PsychiatristService _psychiatristService = PsychiatristService();
-  Widget _selectedScreen = DashboardScreen();
+
+  int _selectedIndex = 0;
   Map<String, dynamic>? _psychiatristDetails;
   bool _isLoading = true;
   bool _hasError = false;
-  int _selectedIndex = 0;
+
+  final List<Widget> _screens = [
+    const DashboardScreen(),
+    const PatientScreen(),
+    const SessionScreen(),
+  ];
 
   @override
   void initState() {
@@ -32,18 +38,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _fetchPsychiatristDetails() async {
     try {
       final details = await _psychiatristService.getPsychiatristDetails();
-      if (details != null) {
-        setState(() {
-          _psychiatristDetails = details;
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _hasError = true;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
+      setState(() {
+        _psychiatristDetails = details;
+        _hasError = details == null;
+        _isLoading = false;
+      });
+    } catch (_) {
       setState(() {
         _hasError = true;
         _isLoading = false;
@@ -53,282 +53,87 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _handleLogout() async {
     final loggedOut = await _psychiatristService.logoutPsychiatrist();
-
     if (loggedOut && mounted) {
       Navigator.pushReplacementNamed(context, '/loginHome');
     }
   }
 
-  void _navigateTo(Widget screen) {
-    setState(() {
-      _isLoading = true;
-      _selectedScreen = screen;
-      _isLoading = false;
-    });
-  }
-
   void _onBottomNavItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-      switch (index) {
-        case 0:
-          _selectedScreen = DashboardScreen();
-          break;
-        case 1:
-          _selectedScreen = PatientScreen();
-          break;
-        case 2:
-          _selectedScreen = SessionScreen();
-          break;
-        default:
-          _selectedScreen = DashboardScreen();
-      }
-    });
+    setState(() => _selectedIndex = index);
   }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final isMobileOrTablet = MediaQuery.of(context).size.width < 1128;
+    final isMobile = MediaQuery.of(context).size.width < kDesktopBreakpoint;
 
-    return Scaffold(
-      appBar:
-          isMobileOrTablet
-              ? AppBar(
-                automaticallyImplyLeading: false,
-                actions: [
-                  IconButton(
-                    icon: Icon(Icons.person),
-                    onPressed: () {
-                      if (_psychiatristDetails != null) {
-                        final psychiatristID = _psychiatristDetails!['ID'];
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (context) => PsychiatristDetailsScreen(
-                                  psychiatristID: psychiatristID,
-                                ),
-                          ),
-                        );
-                      }
-                    },
-                  ),
-
-                  SizedBox(width: 13),
-                  IconButton(
-                    icon: Icon(Icons.logout),
-                    onPressed: _handleLogout,
-                  ),
-                ],
-              )
-              : null,
-      body:
-          isMobileOrTablet
-              ? _isLoading
-                  ? Center(child: CircularProgressIndicator())
-                  : _hasError
-                  ? Center(child: Text('Error fetching details'))
-                  : _selectedScreen
-              : Row(
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: Sidebar(
-                      onItemSelected: _navigateTo,
-                      colorScheme: colorScheme,
-                    ),
-                  ),
-                  const SizedBox(width: 21),
-                  Expanded(
-                    flex: 7,
-                    child:
-                        _isLoading
-                            ? const Center(child: CircularProgressIndicator())
-                            : _selectedScreen,
-                  ),
-                ],
-              ),
-      bottomNavigationBar:
-          isMobileOrTablet
-              ? BottomNavigationBar(
-                currentIndex: _selectedIndex,
-                onTap: _onBottomNavItemTapped,
-                items: <BottomNavigationBarItem>[
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.dashboard_outlined),
-                    activeIcon: Icon(Icons.dashboard_rounded),
-                    backgroundColor: colorScheme.primary,
-                    label: 'Dashboard',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.person_2_outlined),
-                    activeIcon: Icon(Icons.person_2_rounded),
-                    backgroundColor: colorScheme.primary,
-                    label: 'Patients',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.event_outlined),
-                    activeIcon: Icon(Icons.event_rounded),
-                    backgroundColor: colorScheme.primary,
-                    label: 'Sessions',
-                  ),
-                ],
-              )
-              : null,
-    );
-  }
-}
-
-class Sidebar extends StatefulWidget {
-  final Function(Widget) onItemSelected;
-  final ColorScheme colorScheme;
-
-  const Sidebar({
-    super.key,
-    required this.onItemSelected,
-    required this.colorScheme,
-  });
-
-  @override
-  State<Sidebar> createState() => _SidebarState();
-}
-
-class _SidebarState extends State<Sidebar> {
-  final PsychiatristService _psychiatristService = PsychiatristService();
-  Map<String, dynamic>? _psychiatristDetails;
-  bool _isLoading = true;
-  bool _hasError = false;
-  String _username = "Loading...";
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchPsychiatristDetails();
-  }
-
-  Future<void> _fetchPsychiatristDetails() async {
-    try {
-      final details = await _psychiatristService.getPsychiatristDetails();
-      if (details != null) {
-        setState(() {
-          _psychiatristDetails = details;
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _hasError = true;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _hasError = true;
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _handleLogout() async {
-    final loggedOut = await _psychiatristService.logoutPsychiatrist();
-
-    if (loggedOut && mounted) {
-      Navigator.pushReplacementNamed(context, '/loginHome');
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: widget.colorScheme.surfaceContainer,
-      padding: const EdgeInsets.symmetric(vertical: 21, horizontal: 34),
-      child: Column(
-        children: [
-          const CircleAvatar(radius: 50, child: Icon(Icons.person, size: 50)),
-          const SizedBox(width: 10),
-          _isLoading
-              ? Center(child: CircularProgressIndicator())
-              : _hasError
-              ? Center(child: Text('Error fetching details'))
-              : Center(child: _buildPsychiatristDetails(_psychiatristDetails!)),
-
-          SizedBox(height: 34),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ReusableButtonWidget(
-                isLoading: false,
-                onPressed: _handleLogout,
-                text: 'Logout',
-                backgroundColor: widget.colorScheme.tertiary,
-              ),
-              ReusableButtonWidget(
-                isLoading: false,
+    return isMobile
+        ? Scaffold(
+          appBar: AppBar(
+            automaticallyImplyLeading: false,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.person),
                 onPressed: () {
                   if (_psychiatristDetails != null) {
-                    final psychiatristID = _psychiatristDetails!['ID'];
+                    final id = _psychiatristDetails!['ID'];
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder:
-                            (context) => PsychiatristDetailsScreen(
-                              psychiatristID: psychiatristID,
-                            ),
+                            (_) =>
+                                PsychiatristDetailsScreen(psychiatristID: id),
                       ),
                     );
                   }
                 },
-                text: 'View Profile',
+              ),
+              const SizedBox(width: 13),
+              IconButton(
+                icon: const Icon(Icons.logout),
+                onPressed: _handleLogout,
               ),
             ],
           ),
-          const Divider(height: 34),
-          Expanded(
-            child: Column(
-              children: [
-                ReusablenavitemWidget(
-                  icon: Icons.dashboard_rounded,
-                  title: 'Dashboard',
-                  screen: DashboardScreen(),
-                  onItemSelected: widget.onItemSelected,
-                  textColor: widget.colorScheme.primary,
-                ),
-                ReusablenavitemWidget(
-                  icon: Icons.person,
-                  title: 'Patients',
-                  screen: PatientScreen(),
-                  onItemSelected: widget.onItemSelected,
-                  textColor: widget.colorScheme.primary,
-                ),
-                ReusablenavitemWidget(
-                  icon: Icons.event,
-                  title: 'Sessions',
-                  screen: SessionScreen(),
-                  onItemSelected: widget.onItemSelected,
-                  textColor: widget.colorScheme.primary,
-                ),
-              ],
-            ),
+          body:
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _hasError
+                  ? const Center(child: Text('Error fetching details'))
+                  : _screens[_selectedIndex],
+          bottomNavigationBar: BottomNavigationBar(
+            currentIndex: _selectedIndex,
+            onTap: _onBottomNavItemTapped,
+            items: [
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.dashboard_outlined),
+                activeIcon: const Icon(Icons.dashboard_rounded),
+                label: 'Dashboard',
+                backgroundColor: colorScheme.primary,
+              ),
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.person_2_outlined),
+                activeIcon: const Icon(Icons.person_2_rounded),
+                label: 'Patients',
+                backgroundColor: colorScheme.primary,
+              ),
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.event_outlined),
+                activeIcon: const Icon(Icons.event_rounded),
+                label: 'Sessions',
+                backgroundColor: colorScheme.primary,
+              ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPsychiatristDetails(Map<String, dynamic> psych) {
-    var firstName = psych['first_name'];
-    var lastName = psych['last_name'];
-
-    setState(() {
-      _username = '$firstName $lastName';
-    });
-    return Text(
-      _username,
-      style: TextStyle(
-        color: widget.colorScheme.primary,
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
-      ),
-    );
+        )
+        : DesktopLayout(
+          primaryScreen: _screens[_selectedIndex],
+          onItemSelected: (index) => setState(() => _selectedIndex = index),
+          colorScheme: colorScheme,
+          psychiatristDetails: _psychiatristDetails,
+          isLoading: _isLoading,
+          hasError: _hasError,
+          onLogout: _handleLogout,
+        );
   }
 }

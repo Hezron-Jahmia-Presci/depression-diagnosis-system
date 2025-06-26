@@ -106,14 +106,14 @@ class _PsychLoginScreenState extends State<PsychLoginScreen> {
                                 : null,
                   ),
                   const SizedBox(height: 32),
-                  TextButton(
-                    onPressed: () => Navigator.pushNamed(context, '/register'),
-                    child: const Text("Don't have an account? Register"),
-                  ),
                   ReusableButtonWidget(
                     isLoading: _isSubmitting,
                     onPressed: _login,
                     text: 'Login',
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pushNamed(context, '/register'),
+                    child: const Text("Don't have an account? Register"),
                   ),
                 ],
               ),

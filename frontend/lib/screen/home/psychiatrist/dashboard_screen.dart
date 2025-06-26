@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:frontend/widget/reusable_card_widget.dart';
 import 'package:intl/intl.dart';
 import '../../../service/session_service.dart' show SessionService;
 import '../../../service/patient_service.dart' show PatientService;
+import '../../../widget/widget_exporter.dart' show ReusableCardWidget;
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
