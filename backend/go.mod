@@ -34,6 +34,7 @@ require (
 
 require (
 	github.com/gin-contrib/cors v1.7.3
+	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/golang-jwt/jwt/v4 v4.5.1
 	github.com/gorilla/websocket v1.5.3
 	github.com/jackc/pgpassfile v1.0.0 // indirect

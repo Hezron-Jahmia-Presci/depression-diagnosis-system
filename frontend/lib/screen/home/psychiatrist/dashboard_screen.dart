@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
-import '../../../service/session_service.dart' show SessionService;
-import '../../../service/patient_service.dart' show PatientService;
-import '../../../widget/widget_exporter.dart' show ReusableCardWidget;
+import 'package:depression_diagnosis_system/service/lib/session_service.dart';
+import 'package:depression_diagnosis_system/service/lib/patient_service.dart';
+
+import '../../../widget/widget_exporter.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -13,8 +14,8 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  final SessionService _sessionService = SessionService();
-  final PatientService _patientService = PatientService();
+  final _sessionService = SessionService();
+  final _patientService = PatientService();
 
   int _totalPatients = 0;
   int _totalSessions = 0;
@@ -35,14 +36,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     try {
       final patients = await _patientService.getPatientsByPsychiatrist();
       final sessions = await _sessionService.getSessionsByPsychiatrist();
-      _processSessionData(sessions!);
+      _processSessionData(sessions);
 
       setState(() {
-        _totalPatients = patients?.length ?? 0;
+        _totalPatients = patients.length;
         _totalSessions = sessions.length;
         _isLoading = false;
       });
-    } catch (e) {
+    } catch (_) {
       setState(() {
         _hasError = true;
         _isLoading = false;
@@ -51,11 +52,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _processSessionData(List<dynamic> sessions) {
-    DateTime now = DateTime.now();
-    DateTime startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-    DateTime startOfMonth = DateTime(now.year, now.month, 1);
+    final now = DateTime.now();
+    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+    final startOfMonth = DateTime(now.year, now.month, 1);
 
-    Map<String, int> weeklyCounts = {
+    final counts = {
       "Mon": 0,
       "Tue": 0,
       "Wed": 0,
@@ -68,24 +69,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
     int weeklyTotal = 0;
     int monthlyTotal = 0;
 
-    for (var session in sessions) {
-      DateTime sessionDate = DateTime.parse(session['date']);
-      String dayOfWeek = DateFormat('EEE').format(sessionDate);
+    for (final session in sessions) {
+      final date = DateTime.parse(session['date']);
+      final day = DateFormat('EEE').format(date);
 
-      if (sessionDate.isAfter(startOfWeek) ||
-          sessionDate.isAtSameMomentAs(startOfWeek)) {
-        weeklyCounts[dayOfWeek] = (weeklyCounts[dayOfWeek] ?? 0) + 1;
+      if (!counts.containsKey(day)) continue;
+      if (date.isAfter(startOfWeek) || date.isAtSameMomentAs(startOfWeek)) {
+        counts[day] = (counts[day] ?? 0) + 1;
         weeklyTotal++;
       }
-
-      if (sessionDate.isAfter(startOfMonth) ||
-          sessionDate.isAtSameMomentAs(startOfMonth)) {
+      if (date.isAfter(startOfMonth) || date.isAtSameMomentAs(startOfMonth)) {
         monthlyTotal++;
       }
     }
 
     setState(() {
-      _weeklySessionCounts = weeklyCounts;
+      _weeklySessionCounts = counts;
       _weeklySessions = weeklyTotal;
       _monthlySessions = monthlyTotal;
     });
@@ -94,85 +93,63 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text(
-          'DASHBOARD',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-      ),
-      body:
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _hasError
-              ? const Center(child: Text('No summaries to show'))
-              : Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 21,
-                  vertical: 13,
-                ),
-                child: ListView(
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildSummaryCard(
-                            "Total Patients",
-                            _totalPatients,
-                            Icons.person,
-                            colorScheme,
-                          ),
-                        ),
-                        const SizedBox(width: 15),
-                        Expanded(
-                          child: _buildSummaryCard(
-                            "Total Sessions",
-                            _totalSessions,
-                            Icons.event,
-                            colorScheme,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 13),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildSummaryCard(
-                            "This Week",
-                            _weeklySessions,
-                            Icons.date_range,
-                            colorScheme,
-                          ),
-                        ),
-                        const SizedBox(width: 13),
-                        Expanded(
-                          child: _buildSummaryCard(
-                            "This Month",
-                            _monthlySessions,
-                            Icons.calendar_today,
-                            colorScheme,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Center(
-                      child: Text(
-                        "WEEKLY SESSON SUMMARY GRAPH",
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    Divider(),
-                    _buildWeeklyLineGraph(colorScheme),
-                  ],
-                ),
+
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (_hasError) {
+      return const Scaffold(
+        body: Center(child: Text("Failed to load dashboard")),
+      );
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Wrap(
+            spacing: 16,
+            runSpacing: 16,
+            children: [
+              _buildSummaryCard(
+                "Total Patients",
+                _totalPatients,
+                Icons.person,
+                Colors.deepPurple,
               ),
+              _buildSummaryCard(
+                "Total Sessions",
+                _totalSessions,
+                Icons.event,
+                Colors.teal,
+              ),
+              _buildSummaryCard(
+                "This Week",
+                _weeklySessions,
+                Icons.date_range,
+                Colors.orange,
+              ),
+              _buildSummaryCard(
+                "This Month",
+                _monthlySessions,
+                Icons.calendar_today,
+                Colors.blue,
+              ),
+            ],
+          ),
+          const SizedBox(height: 89),
+          const Text(
+            "Weekly Session Overview",
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const Divider(height: 32),
+          _buildWeeklyLineGraph(colorScheme),
+          const SizedBox(height: 32),
+        ],
+      ),
     );
   }
 
@@ -180,102 +157,90 @@ class _DashboardScreenState extends State<DashboardScreen> {
     String title,
     int count,
     IconData icon,
-    ColorScheme colorScheme,
+    Color color,
   ) {
-    return ReusableCardWidget(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Icon(icon, size: 40, color: Colors.blue),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+    return SizedBox(
+      width: MediaQuery.of(context).size.width > 600 ? 260 : double.infinity,
+      child: ReusableCardWidget(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
             children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                count.toString(),
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green,
+              Icon(icon, size: 40, color: color),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Text(
+                      count.toString(),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 24,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildWeeklyLineGraph(ColorScheme colorScheme) {
-    List<FlSpot> spots = [];
-    List<String> daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    final days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    final spots = List<FlSpot>.generate(days.length, (i) {
+      final value = _weeklySessionCounts[days[i]]?.toDouble() ?? 0.0;
+      return FlSpot(i.toDouble(), value);
+    });
 
-    for (int i = 0; i < daysOfWeek.length; i++) {
-      spots.add(
-        FlSpot(i.toDouble(), _weeklySessionCounts[daysOfWeek[i]]!.toDouble()),
-      );
-    }
+    final maxY =
+        (_weeklySessionCounts.values.fold<int>(0, (a, b) => a > b ? a : b) + 1)
+            .toDouble();
 
     return SizedBox(
-      height: MediaQuery.sizeOf(context).height / 2.5,
+      height: 500,
       child: ReusableCardWidget(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 13, vertical: 24),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24),
           child: LineChart(
             LineChartData(
               minX: 0,
-              maxX: daysOfWeek.length - 1,
-              lineBarsData: [
-                LineChartBarData(
-                  spots: spots,
-                  isCurved: true,
-
-                  barWidth: 3,
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.red,
-                      Colors.orange,
-                      Colors.blue,
-                      Colors.lightGreen,
-                      Colors.green,
-                    ],
-
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  belowBarData: BarAreaData(
-                    show: true,
-                    color: colorScheme.primaryContainer.withAlpha(100),
-                  ),
-                  dotData: FlDotData(show: true),
-                ),
-              ],
+              maxX: 6,
+              minY: 0,
+              maxY: maxY,
               titlesData: FlTitlesData(
-                topTitles: AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
-                ),
-                rightTitles: AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
-                ),
                 leftTitles: AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    interval: 1,
+                    getTitlesWidget:
+                        (value, _) => Text(
+                          value.toInt().toString(),
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                    reservedSize: 32,
+                  ),
                 ),
                 bottomTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
                     interval: 1,
-                    getTitlesWidget: (value, meta) {
-                      if (value >= 0 && value < daysOfWeek.length) {
+                    getTitlesWidget: (value, _) {
+                      if (value >= 0 && value < days.length) {
                         return Padding(
-                          padding: const EdgeInsets.only(top: 32),
+                          padding: const EdgeInsets.only(top: 24),
                           child: Text(
-                            daysOfWeek[value.toInt()],
+                            days[value.toInt()],
                             style: const TextStyle(fontSize: 12),
                           ),
                         );
@@ -285,18 +250,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     reservedSize: 55,
                   ),
                 ),
+                topTitles: AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                rightTitles: AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
               ),
-              borderData: FlBorderData(show: false),
               gridData: FlGridData(show: true),
-              extraLinesData: ExtraLinesData(
-                horizontalLines: [
-                  HorizontalLine(
-                    y: 0,
-                    color: Colors.transparent,
-                    strokeWidth: 0,
+              borderData: FlBorderData(show: false),
+              lineBarsData: [
+                LineChartBarData(
+                  spots: spots,
+                  isCurved: true,
+                  color: colorScheme.primary,
+                  barWidth: 3,
+                  belowBarData: BarAreaData(
+                    show: true,
+                    color: colorScheme.primary.withOpacity(0.2),
                   ),
-                ],
-              ),
+                  dotData: FlDotData(show: true),
+                ),
+              ],
             ),
           ),
         ),

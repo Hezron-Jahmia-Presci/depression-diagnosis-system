@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-
+import 'package:depression_diagnosis_system/service/lib/psychiatrist_service.dart';
 import '../../../../widget/widget_exporter.dart';
-import '../../../../service/psychiatrist_service.dart' show PsychiatristService;
-import 'edit_psychiatrist_details_screen.dart'
-    show EditPsychiatristDetailsScreen;
+import '../../../screens_exporter.dart';
 
 class PsychiatristDetailsScreen extends StatefulWidget {
   final int psychiatristID;
@@ -15,7 +13,7 @@ class PsychiatristDetailsScreen extends StatefulWidget {
 }
 
 class _PsychiatristDetailsScreenState extends State<PsychiatristDetailsScreen> {
-  final PsychiatristService _psyhiatristService = PsychiatristService();
+  final _psychiatristService = PsychiatristService();
   Map<String, dynamic>? _psychiatristDetails;
   bool _isLoading = true;
   bool _hasError = false;
@@ -23,24 +21,18 @@ class _PsychiatristDetailsScreenState extends State<PsychiatristDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchPsychiatristDetails();
+    _loadPsychiatristDetails();
   }
 
-  Future<void> _fetchPsychiatristDetails() async {
+  Future<void> _loadPsychiatristDetails() async {
     try {
-      final details = await _psyhiatristService.getPsychiatristDetails();
-      if (details != null) {
-        setState(() {
-          _psychiatristDetails = details;
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _hasError = true;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
+      final details = await _psychiatristService.getPsychiatristDetails();
+      setState(() {
+        _psychiatristDetails = details;
+        _hasError = details == null;
+        _isLoading = false;
+      });
+    } catch (_) {
       setState(() {
         _hasError = true;
         _isLoading = false;
@@ -48,12 +40,10 @@ class _PsychiatristDetailsScreenState extends State<PsychiatristDetailsScreen> {
     }
   }
 
-  void _navigateToEditPsychiatristDetailsScreen() {
+  void _goToEditScreen() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const EditPsychiatristDetailsScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => const EditPsychiatristDetailsScreen()),
     );
   }
 
@@ -62,59 +52,55 @@ class _PsychiatristDetailsScreenState extends State<PsychiatristDetailsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'PROFILE',
+          'Profile',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        centerTitle: true,
-        leading: IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: Icon(Icons.arrow_back_ios_new_rounded),
-        ),
+        leading:
+            Navigator.canPop(context)
+                ? IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                  onPressed: () => Navigator.pop(context),
+                )
+                : null,
       ),
       body:
           _isLoading
-              ? Center(child: CircularProgressIndicator())
-              : _hasError
-              ? Center(child: Text('Error fetching details'))
-              : Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 21,
-                  vertical: 13,
-                ),
-                child:
-                    _psychiatristDetails != null
-                        ? _buildPsychDetails(_psychiatristDetails!)
-                        : const Center(child: Text('No details available')),
-              ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _navigateToEditPsychiatristDetailsScreen,
-        icon: const Icon(Icons.edit_note_outlined),
-        label: const Text("Edit Details"),
-      ),
+              ? const Center(child: CircularProgressIndicator())
+              : _hasError || _psychiatristDetails == null
+              ? const Center(child: Text('Error loading psychiatrist details'))
+              : _buildProfileView(),
     );
   }
 
-  Widget _buildPsychDetails(Map<String, dynamic> psych) {
-    return Center(
-      child: SizedBox(
-        width: MediaQuery.sizeOf(context).width / 2,
-        height: MediaQuery.sizeOf(context).height / 2,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ReusableCardWidget(
-              child: Text('First Name: ${psych['first_name'] ?? 'N/A'}'),
-            ),
-            const SizedBox(height: 10),
-            ReusableCardWidget(
-              child: Text('Last Name: ${psych['last_name'] ?? 'N/A'}'),
-            ),
-            const SizedBox(height: 10),
-            ReusableCardWidget(
-              child: Text('Email: ${psych['email'] ?? 'N/A'}'),
-            ),
-          ],
+  Widget _buildProfileView() {
+    final psych = _psychiatristDetails!;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ReusableCardWidget(
+                child: Text('First Name: ${psych['first_name'] ?? 'N/A'}'),
+              ),
+              const SizedBox(height: 12),
+              ReusableCardWidget(
+                child: Text('Last Name: ${psych['last_name'] ?? 'N/A'}'),
+              ),
+              const SizedBox(height: 12),
+              ReusableCardWidget(
+                child: Text('Email: ${psych['email'] ?? 'N/A'}'),
+              ),
+              const SizedBox(height: 24),
+              ReusableButtonWidget(
+                text: 'Edit Details',
+                isLoading: false,
+                onPressed: _goToEditScreen,
+              ),
+            ],
+          ),
         ),
       ),
     );

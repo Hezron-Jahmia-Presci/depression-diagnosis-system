@@ -1,7 +1,7 @@
 package controller
 
 import (
-	interfaces "depression-diagnosis-system/api/interface"
+	"depression-diagnosis-system/api/interfaces"
 	"depression-diagnosis-system/api/middleware"
 	"depression-diagnosis-system/api/util"
 	"depression-diagnosis-system/database"
@@ -11,76 +11,89 @@ import (
 
 type AdminController struct{}
 
-func NewAdminController() interfaces.AdminInterface{
+func NewAdminController() interfaces.AdminInterface {
 	return &AdminController{}
 }
 
-func (pc * AdminController) RegisterAdmin(firstName, lastName, email, password string) (*model.Admin, error) {
-	hashedPassword, err := util.HashPassword(password) 
-	if err != nil {
+func (ac *AdminController) CreateAdmin(admin *model.Admin) (*model.Admin, error) {
+	if !util.IsValidEmail(admin.Email) {
+		return nil, errors.New("invalid email format")
+	}
+
+	var existing model.Admin
+	if err := database.DB.Where("email = ?", admin.Email).First(&existing).Error; err == nil {
+		return nil, errors.New("admin with this email already exists")
+	}
+
+	if err := database.DB.Create(admin).Error; err != nil {
 		return nil, err
 	}
 
-	admin := model.Admin{
-		FirstName: firstName,
-		LastName: lastName,
-		Email: email,
-		PasswordHash: hashedPassword,
-	}
+	return admin, nil
+}
 
-	if err := database.DB.Create(&admin).Error; err != nil {
+func (ac *AdminController) GetAdminByID(id uint) (*model.Admin, error) {
+	var admin model.Admin
+	if err := database.DB.First(&admin, id).Error; err != nil {
 		return nil, err
 	}
 	return &admin, nil
 }
 
-func (pc *AdminController) LoginAdmin(email, password string) (string, error) {
+func (ac *AdminController) UpdateAdmin(id uint, updatedAdmin *model.Admin) (*model.Admin, error) {
 	var admin model.Admin
-
-	if err := database.DB.Where("email = ?", email).First(&admin).Error; err != nil {
-		return "", errors.New("user does not exist")
-	}
-
-	if !util.CheckPassword(admin.PasswordHash, password) {
-		return "", errors.New("invalid password")
-	}
-
-	token, err := middleware.GenerateToken(admin.ID, admin.Email)
-	if err != nil {
-		return "", err
-	}
-	
-	return token, nil
-}
-
-func (pc *AdminController) LogoutAdmin(token string) (error) {
-	if err := middleware.InvalidateToken(token); err != nil {
-		return errors.New("failed to logout")
-	}
-	return nil
-}
-
-func (pc *AdminController) GetAdminDetails(adminID uint) (*model.Admin, error) {
-	var admin model.Admin
-	if err := database.DB.First(&admin, adminID).Error; err != nil {
-		return nil, err
-	}
-	return &admin, nil
-}
-
-func (pc *AdminController) UpdateAdmin(adminID uint, firstName, lastName, email string) (*model.Admin, error) {
-	var admin model.Admin
-	if err := database.DB.First(&admin, adminID).Error; err != nil {
+	if err := database.DB.First(&admin, id).Error; err != nil {
 		return nil, err
 	}
 
-	admin.FirstName = firstName
-	admin.LastName = lastName
-	admin.Email = email
+	if updatedAdmin.Email != "" && !util.IsValidEmail(updatedAdmin.Email) {
+		return nil, errors.New("invalid email format")
+	}
+
+	admin.FirstName = updatedAdmin.FirstName
+	admin.LastName = updatedAdmin.LastName
+	admin.Email = updatedAdmin.Email
 
 	if err := database.DB.Save(&admin).Error; err != nil {
 		return nil, err
 	}
 
 	return &admin, nil
+}
+
+func (ac *AdminController) DeleteAdmin(id uint) error {
+	var admin model.Admin
+	if err := database.DB.First(&admin, id).Error; err != nil {
+		return err
+	}
+	if err := database.DB.Delete(&admin).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (ac *AdminController) LogInAdmin(email, password string) (string, error) {
+	var admin model.Admin
+	if err := database.DB.Where("email = ?", email).First(&admin).Error; err != nil {
+		return "", errors.New("admin does not exist")
+	}
+
+	if !util.CheckPassword(admin.PasswordHash, password) {
+		return "", errors.New("invalid password")
+	}
+
+
+	token, err := middleware.GenerateToken(admin.ID, admin.Email)
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
+}
+
+func (ac *AdminController) LogOutAdmin(token string) error {
+	if err := middleware.InvalidateToken(token); err != nil {
+		return errors.New("failed to logout")
+	}
+	return nil
 }

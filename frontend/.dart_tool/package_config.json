@@ -80,12 +80,6 @@
       "languageVersion": "2.12"
     },
     {
-      "name": "flutter_lints",
-      "rootUri": "file:///C:/Users/Hezron%20Jahmia/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_lints-5.0.0",
-      "packageUri": "lib/",
-      "languageVersion": "3.5"
-    },
-    {
       "name": "flutter_secure_storage",
       "rootUri": "file:///C:/Users/Hezron%20Jahmia/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_secure_storage-9.2.4",
       "packageUri": "lib/",
@@ -93,7 +87,7 @@
     },
     {
       "name": "flutter_secure_storage_linux",
-      "rootUri": "file:///C:/Users/Hezron%20Jahmia/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_secure_storage_linux-1.2.2",
+      "rootUri": "file:///C:/Users/Hezron%20Jahmia/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_secure_storage_linux-1.2.3",
       "packageUri": "lib/",
       "languageVersion": "2.12"
     },
@@ -135,7 +129,7 @@
     },
     {
       "name": "http",
-      "rootUri": "file:///C:/Users/Hezron%20Jahmia/AppData/Local/Pub/Cache/hosted/pub.dev/http-1.3.0",
+      "rootUri": "file:///C:/Users/Hezron%20Jahmia/AppData/Local/Pub/Cache/hosted/pub.dev/http-1.4.0",
       "packageUri": "lib/",
       "languageVersion": "3.4"
     },
@@ -176,12 +170,6 @@
       "languageVersion": "3.2"
     },
     {
-      "name": "lints",
-      "rootUri": "file:///C:/Users/Hezron%20Jahmia/AppData/Local/Pub/Cache/hosted/pub.dev/lints-5.1.1",
-      "packageUri": "lib/",
-      "languageVersion": "3.6"
-    },
-    {
       "name": "matcher",
       "rootUri": "file:///C:/Users/Hezron%20Jahmia/AppData/Local/Pub/Cache/hosted/pub.dev/matcher-0.12.17",
       "packageUri": "lib/",
@@ -213,9 +201,9 @@
     },
     {
       "name": "path_provider_android",
-      "rootUri": "file:///C:/Users/Hezron%20Jahmia/AppData/Local/Pub/Cache/hosted/pub.dev/path_provider_android-2.2.15",
+      "rootUri": "file:///C:/Users/Hezron%20Jahmia/AppData/Local/Pub/Cache/hosted/pub.dev/path_provider_android-2.2.17",
       "packageUri": "lib/",
-      "languageVersion": "3.5"
+      "languageVersion": "3.6"
     },
     {
       "name": "path_provider_foundation",
@@ -297,7 +285,7 @@
     },
     {
       "name": "timezone",
-      "rootUri": "file:///C:/Users/Hezron%20Jahmia/AppData/Local/Pub/Cache/hosted/pub.dev/timezone-0.10.0",
+      "rootUri": "file:///C:/Users/Hezron%20Jahmia/AppData/Local/Pub/Cache/hosted/pub.dev/timezone-0.10.1",
       "packageUri": "lib/",
       "languageVersion": "2.19"
     },
@@ -327,19 +315,19 @@
     },
     {
       "name": "web_socket",
-      "rootUri": "file:///C:/Users/Hezron%20Jahmia/AppData/Local/Pub/Cache/hosted/pub.dev/web_socket-0.1.6",
+      "rootUri": "file:///C:/Users/Hezron%20Jahmia/AppData/Local/Pub/Cache/hosted/pub.dev/web_socket-1.0.1",
       "packageUri": "lib/",
-      "languageVersion": "3.3"
+      "languageVersion": "3.4"
     },
     {
       "name": "web_socket_channel",
-      "rootUri": "file:///C:/Users/Hezron%20Jahmia/AppData/Local/Pub/Cache/hosted/pub.dev/web_socket_channel-3.0.2",
+      "rootUri": "file:///C:/Users/Hezron%20Jahmia/AppData/Local/Pub/Cache/hosted/pub.dev/web_socket_channel-3.0.3",
       "packageUri": "lib/",
       "languageVersion": "3.3"
     },
     {
       "name": "win32",
-      "rootUri": "file:///C:/Users/Hezron%20Jahmia/AppData/Local/Pub/Cache/hosted/pub.dev/win32-5.11.0",
+      "rootUri": "file:///C:/Users/Hezron%20Jahmia/AppData/Local/Pub/Cache/hosted/pub.dev/win32-5.13.0",
       "packageUri": "lib/",
       "languageVersion": "3.7"
     },
@@ -350,13 +338,13 @@
       "languageVersion": "3.3"
     },
     {
-      "name": "frontend",
+      "name": "depression_diagnosis_system",
       "rootUri": "../",
       "packageUri": "lib/",
       "languageVersion": "3.7"
     }
   ],
-  "generated": "2025-03-20T09:59:54.692242Z",
+  "generated": "2025-07-01T09:35:36.495061Z",
   "generator": "pub",
   "generatorVersion": "3.7.0",
   "flutterRoot": "file:///C:/Users/Hezron%20Jahmia/flutter",

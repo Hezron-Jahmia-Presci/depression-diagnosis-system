@@ -5,3 +5,5 @@ export 'lib/reusable_textfield_widget.dart';
 export 'lib/reusable_radio_button_widget.dart';
 export 'lib/reusable_card_widget.dart';
 export 'lib/reusable_nav_item_widget.dart';
+export 'lib/reusable_adaptive_sidebar_widget.dart';
+export 'lib/reusable_gradient_icon.dart';

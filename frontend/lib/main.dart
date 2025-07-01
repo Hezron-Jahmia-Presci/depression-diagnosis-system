@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:depression_diagnosis_system/layout/app_layout.dart';
 import 'dart:async';
 
-import 'screen/auth/login/login_home_screen.dart' show LoginHomeScreen;
-import 'screen/auth/register_screen.dart' show RegisterScreen;
-import 'screen/home/psychiatrist/home_screen.dart' show HomeScreen;
+import 'screen/auth/login_home_screen.dart' show LoginHomeScreen;
+import 'screen/auth/psych_register_screen.dart' show PsychRegisterScreen;
 
 void main() {
   runApp(const MyApp());
@@ -12,7 +12,7 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  static const Color _seedColor = Colors.blue;
+  static const Color _seedColor = Colors.teal;
   static const bool _isDarkMode = false;
 
   static ColorScheme lightColorScheme = ColorScheme.fromSeed(
@@ -32,8 +32,8 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       routes: {
         '/loginHome': (context) => LoginHomeScreen(),
-        '/register': (context) => RegisterScreen(),
-        '/psychDashboard': (context) => HomeScreen(),
+        '/register': (context) => PsychRegisterScreen(),
+        '/psychDashboard': (context) => AppLayout(title: 'Dashboard'),
       },
       debugShowCheckedModeBanner: false,
 
@@ -75,17 +75,13 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(automaticallyImplyLeading: false),
       body: Center(
-        child: Text(
-          'DDS',
-          style: TextStyle(
-            fontSize: 44,
-            fontWeight: FontWeight.bold,
-            color: colorScheme.primary,
-          ),
+        child: Image.asset(
+          'assets/images/logo.png',
+          height: 430, // adjust height as needed
+          fit: BoxFit.contain,
         ),
       ),
     );

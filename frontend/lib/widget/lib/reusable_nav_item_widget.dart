@@ -20,7 +20,7 @@ class ReusableNavItemWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isCompact = screenWidth < 1200;
+    final isCompact = screenWidth < 1000;
     final tileWidth = isCompact ? 60.0 : double.infinity;
 
     return Padding(

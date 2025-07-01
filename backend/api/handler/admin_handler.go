@@ -2,9 +2,9 @@ package handler
 
 import (
 	"depression-diagnosis-system/api/controller"
-	interfaces "depression-diagnosis-system/api/interface"
+	"depression-diagnosis-system/api/interfaces"
 	"depression-diagnosis-system/api/util"
-
+	"depression-diagnosis-system/database/model"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -20,34 +20,54 @@ func NewAdminHandler() *AdminHandler {
 	}
 }
 
-func (ah *AdminHandler) RegisterAdmin(c *gin.Context) {
-	var admin struct {
-		FirstName string `json:"firstName" binding:"required"`
-		LastName  string `json:"lastName" binding:"required"`
+func (ah *AdminHandler) CreateAdmin(c *gin.Context) {
+	// Temporary struct for binding user input
+	var input struct {
+		FirstName string `json:"first_name" binding:"required"`
+		LastName  string `json:"last_name" binding:"required"`
 		Email     string `json:"email" binding:"required,email"`
-		Password  string `json:"password" binding:"required,min=6"`
+		Password  string `json:"password" binding:"required"`
 	}
+	
 
-	if err := c.ShouldBindJSON(&admin); err != nil {
-		c.JSON(http.StatusBadRequest, util.ResponseStructure{
-			Status: http.StatusBadRequest,
-			Message: "error:" + err.Error(),
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  http.StatusBadRequest,
+			"message": "Invalid input: " + err.Error(),
 		})
 		return
 	}
 
-	createdAdmin, err := ah.AdminController.RegisterAdmin(admin.FirstName,admin.LastName,admin.Email, admin.Password)
+	// Manually create the admin model and hash password
+	hashedPassword, err := util.HashPassword(input.Password)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, util.ResponseStructure{
-			Status:  http.StatusInternalServerError,
-			Message: "error: " + err.Error(),
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  http.StatusInternalServerError,
+			"message": "Failed to hash password: " + err.Error(),
+		})
+		return
+	}
+
+	admin := model.Admin{
+		FirstName:    input.FirstName,
+		LastName:     input.LastName,
+		Email:        input.Email,
+		PasswordHash: hashedPassword, // keep using this field name
+	}
+
+	createdAdmin, err := ah.AdminController.CreateAdmin(&admin)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  http.StatusInternalServerError,
+			"message": "Failed to create admin: " + err.Error(),
 		})
 		return
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"message":    "Admin registered successfully",
-		"psychiatrist": gin.H{
+		"status":  http.StatusCreated,
+		"message": "Admin created successfully",
+		"admin": gin.H{
 			"id":        createdAdmin.ID,
 			"firstName": createdAdmin.FirstName,
 			"lastName":  createdAdmin.LastName,
@@ -56,119 +76,148 @@ func (ah *AdminHandler) RegisterAdmin(c *gin.Context) {
 	})
 }
 
-func (ah *AdminHandler) LoginAdmin(c *gin.Context){
-	var logginRequest struct {
-		Email 	 string `json:"email" binding:"required"`
-		Password string `json:"password" binding:"required"`
-	}
 
-	if err := c.ShouldBindJSON(&logginRequest); err != nil {
-		c.JSON(http.StatusBadRequest, util.ResponseStructure{
-			Status: http.StatusBadRequest,
-			Message: "error:" + err.Error(),
+func (ah *AdminHandler) GetAdminByID(c *gin.Context) {
+	adminID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  http.StatusBadRequest,
+			"message": "Admin ID not provided",
 		})
 		return
 	}
 
-	token, err := ah.AdminController.LoginAdmin(logginRequest.Email, logginRequest.Password) 
+	admin, err := ah.AdminController.GetAdminByID(adminID.(uint))
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, util.ResponseStructure{
-			Status:  http.StatusUnauthorized,
-			Message: "error: " + err.Error(),
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  http.StatusInternalServerError,
+			"message": "Failed to retrieve admin: " + err.Error(),
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"token":   token,
-		
+		"status": http.StatusOK,
+		"admin":  admin,
 	})
-
-}
-
-func (ah *AdminHandler) LogoutAdmin(c *gin.Context) {
-	token := c.GetHeader("Authorization")
-	if token == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing token"})
-		return
-	}
-
-	err := ah.AdminController.LogoutAdmin(token)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
-}
-
-func (ah *AdminHandler) GetAdminDetails(c *gin.Context) {
-	adminID, exists := c.Get("userID")
-	if !exists {
-		c.JSON(http.StatusNotFound, util.ResponseStructure{
-			Status:  http.StatusNotFound,
-			Message: "error: not found",
-		})
-		return
-	}
-
-	admin, err := ah.AdminController.GetAdminDetails(adminID.(uint))
-
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, util.ResponseStructure{
-			Status:  http.StatusInternalServerError,
-			Message: "error: could not retrieve session",
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"admin": admin})
 }
 
 func (ah *AdminHandler) UpdateAdmin(c *gin.Context) {
-	var request struct {
-		FirstName string `json:"firstName" binding:"required"`
-		LastName  string `json:"lastName" binding:"required"`
-		Email     string `json:"email" binding:"required,email"`
-	}
+	var updatedAdmin model.Admin
 
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, util.ResponseStructure{
-			Status:  http.StatusBadRequest,
-			Message: "error: " + err.Error(),
+	if err := c.ShouldBindJSON(&updatedAdmin); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  http.StatusBadRequest,
+			"message": "Invalid input: " + err.Error(),
 		})
 		return
 	}
 
 	adminID, exists := c.Get("userID")
 	if !exists {
-		c.JSON(http.StatusNotFound, util.ResponseStructure{
-			Status:  http.StatusNotFound,
-			Message: "error: not found",
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  http.StatusBadRequest,
+			"message": "Admin ID not provided",
 		})
 		return
 	}
 
-	admin, err := ah.AdminController.UpdateAdmin(adminID.(uint), request.FirstName, request.LastName, request.Email)
-	
+	admin, err := ah.AdminController.UpdateAdmin(adminID.(uint), &updatedAdmin)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, util.ResponseStructure{
-			Status:  http.StatusInternalServerError,
-			Message: "error: " + err.Error(),
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  http.StatusInternalServerError,
+			"message": "Failed to update admin: " + err.Error(),
 		})
 		return
 	}
 
-		c.JSON(http.StatusOK, gin.H{
-		"message":    "Admin details updated successfully",
-		"psychiatrist": gin.H{
+	c.JSON(http.StatusOK, gin.H{
+		"status":  http.StatusOK,
+		"message": "Admin updated successfully",
+		"admin": gin.H{
 			"id":        admin.ID,
 			"firstName": admin.FirstName,
 			"lastName":  admin.LastName,
 			"email":     admin.Email,
 		},
 	})
-
 }
 
+func (ah *AdminHandler) DeleteAdmin(c *gin.Context) {
+	adminID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  http.StatusBadRequest,
+			"message": "Admin ID not provided",
+		})
+		return
+	}
+
+	err := ah.AdminController.DeleteAdmin(adminID.(uint))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  http.StatusInternalServerError,
+			"message": "Failed to delete admin: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  http.StatusOK,
+		"message": "Admin deleted successfully",
+	})
+}
+
+func (ah *AdminHandler) LogInAdmin(c *gin.Context) {
+	var loginData struct {
+		Email    string `json:"email" binding:"required,email"`
+		Password string `json:"password" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&loginData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  http.StatusBadRequest,
+			"message": "Invalid login data: " + err.Error(),
+		})
+		return
+	}
+
+	token, err := ah.AdminController.LogInAdmin(loginData.Email, loginData.Password)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"status":  http.StatusUnauthorized,
+			"message": "Login failed: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  http.StatusOK,
+		"message": "Login successful",
+		"token":   token,
+	})
+}
+
+func (ah *AdminHandler) LogOutAdmin(c *gin.Context) {
+	token := c.GetHeader("Authorization")
+	if token == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  http.StatusBadRequest,
+			"message": "Authorization token is required",
+		})
+		return
+	}
+
+	if err := ah.AdminController.LogOutAdmin(token); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  http.StatusInternalServerError,
+			"message": "Logout failed: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  http.StatusOK,
+		"message": "Logout successful",
+	})
+}

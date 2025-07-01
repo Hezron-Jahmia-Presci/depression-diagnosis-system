@@ -1,16 +1,16 @@
-// lib/layout/app_layout.dart
-
 import 'package:flutter/material.dart';
-import 'package:frontend/constants/layout_constant.dart'
-    show kDesktopBreakpoint;
-
+import 'package:depression_diagnosis_system/constants/layout_constant.dart';
+import 'package:depression_diagnosis_system/layout/lib/desktop_layout.dart';
+import 'package:depression_diagnosis_system/layout/lib/mobile_layout.dart';
+import 'package:depression_diagnosis_system/screen/home/psychiatrist/patient_screens/patient_screen.dart';
+import 'package:depression_diagnosis_system/screen/home/psychiatrist/session_screens/session_screen.dart';
+import 'package:depression_diagnosis_system/service/lib/psychiatrist_service.dart';
 import '../screen/screens_exporter.dart';
-import '../service/psychiatrist_service.dart' show PsychiatristService;
-import 'lob/desktop_layout.dart' show DesktopLayout;
-import 'lob/mobile_layout.dart' show MobileLayout;
+import '../widget/widget_exporter.dart';
 
 class AppLayout extends StatefulWidget {
-  const AppLayout({super.key});
+  final String title;
+  const AppLayout({required this.title, super.key});
 
   @override
   State<AppLayout> createState() => _AppLayoutState();
@@ -18,17 +18,90 @@ class AppLayout extends StatefulWidget {
 
 class _AppLayoutState extends State<AppLayout> {
   final _psychiatristService = PsychiatristService();
-  final _screens = [DashboardScreen(), PatientScreen(), SessionScreen()];
+  final GlobalKey<PatientScreenState> _patientScreenKey =
+      GlobalKey<PatientScreenState>();
+  final GlobalKey<SessionScreenState> _sessionScreenKey =
+      GlobalKey<SessionScreenState>();
 
+  late final List<Widget> _screens;
   int _selectedIndex = 0;
+
   Map<String, dynamic>? _psychiatristDetails;
   bool _isLoading = true;
   bool _hasError = false;
+  bool _isFabVisible = true;
+
+  late final Map<int, FabConfig> _fabConfigs = {
+    1: FabConfig(
+      icon: Icons.person_add_alt_1_rounded,
+      label: "Register Patient",
+      onPressed: () async {
+        final didRegister = await _openBottomSheet(
+          const RegisterPatientScreen(),
+        );
+        if (didRegister == true) {
+          await _patientScreenKey.currentState?.reload();
+          setState(() {});
+        }
+      },
+    ),
+    2: FabConfig(
+      icon: Icons.add_to_queue_outlined,
+      label: "Start New Session",
+      onPressed: () async {
+        final didCreate = await _openBottomSheet(const CreateSessionScreen());
+        if (didCreate == true) {
+          await _sessionScreenKey.currentState?.reload();
+          setState(() {});
+        }
+      },
+    ),
+  };
 
   @override
   void initState() {
     super.initState();
+    _screens = [
+      DashboardScreen(),
+      PatientScreen(
+        key: _patientScreenKey,
+        onFabVisibilityChanged: (visible) {
+          setState(() => _isFabVisible = visible);
+        },
+      ),
+      SessionScreen(
+        key: _sessionScreenKey,
+        onFabVisibilityChanged: (visible) {
+          setState(() => _isFabVisible = visible);
+        },
+      ),
+    ];
+
     _fetchPsychiatristDetails();
+  }
+
+  Future<bool?> _openBottomSheet(Widget child) {
+    return showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.75,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) {
+            return ReusableCardWidget(
+              child: SingleChildScrollView(
+                controller: scrollController,
+                child: child,
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   Future<void> _fetchPsychiatristDetails() async {
@@ -39,7 +112,8 @@ class _AppLayoutState extends State<AppLayout> {
         _hasError = details == null;
         _isLoading = false;
       });
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Error fetching psychiatrist details: $e');
       setState(() {
         _hasError = true;
         _isLoading = false;
@@ -47,15 +121,11 @@ class _AppLayoutState extends State<AppLayout> {
     }
   }
 
-  void _onNavTap(int index) => setState(() => _selectedIndex = index);
-
-  void _navigateTo(Widget screen) {
-    final index = _screens.indexWhere(
-      (s) => s.runtimeType == screen.runtimeType,
-    );
-    if (index != -1) {
-      setState(() => _selectedIndex = index);
-    }
+  void _onNavTap(int index) {
+    setState(() {
+      _selectedIndex = index;
+      _isFabVisible = true;
+    });
   }
 
   Future<void> _handleLogout() async {
@@ -65,28 +135,155 @@ class _AppLayoutState extends State<AppLayout> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isMobileOrTablet = constraints.maxWidth < kDesktopBreakpoint;
+  Widget? _buildFAB() {
+    if (!_isFabVisible) return null; // 👈 hide FAB when not visible
 
-        return isMobileOrTablet
-            ? MobileLayout(
-              selectedIndex: _selectedIndex,
-              onNavTap: _onNavTap,
-              screen: _screens[_selectedIndex],
-            )
-            : DesktopLayout(
-              primaryScreen: _screens[_selectedIndex],
-              onItemSelected: _onNavTap,
-              colorScheme: Theme.of(context).colorScheme,
-              psychiatristDetails: _psychiatristDetails,
-              isLoading: _isLoading,
-              hasError: _hasError,
-              onLogout: _handleLogout,
-            );
-      },
+    final config = _fabConfigs[_selectedIndex];
+    if (config == null) return null;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 83),
+      child: FloatingActionButton.extended(
+        onPressed: config.onPressed,
+        icon: Icon(config.icon),
+        label: Text(config.label),
+      ),
     );
   }
+
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < kDesktopBreakpoint;
+
+    final sidebar = AdaptiveSidebar(
+      isCompact: isMobile,
+      onItemSelected: _onNavTap,
+      onLogout: _handleLogout,
+      colorScheme: Theme.of(context).colorScheme,
+      userDetails: _psychiatristDetails,
+      isLoading: _isLoading,
+      hasError: _hasError,
+      onProfileTap: () {
+        if (_psychiatristDetails != null) {
+          final id = _psychiatristDetails!['ID'];
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => PsychiatristDetailsScreen(psychiatristID: id),
+            ),
+          );
+        }
+      },
+      navigationItems: [
+        SidebarNavItem(
+          index: 0,
+          icon: Icons.dashboard_rounded,
+          title: 'Dashboard',
+          screen: DashboardScreen(),
+        ),
+        SidebarNavItem(
+          index: 1,
+          icon: Icons.person,
+          title: 'Patients',
+          screen: const PatientScreen(),
+        ),
+        SidebarNavItem(
+          index: 2,
+          icon: Icons.event,
+          title: 'Sessions',
+          screen: const SessionScreen(),
+        ),
+      ],
+    );
+
+    final titles = ['Dashboard', 'Patients', 'Sessions'];
+
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          forceMaterialTransparency: true,
+          title: Row(
+            children: [
+              Image.asset(
+                'assets/images/logo.png',
+                height: 50, // adjust height as needed
+                fit: BoxFit.contain,
+              ),
+              Text(
+                titles[_selectedIndex],
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          actions: [
+            PopupMenuButton<String>(
+              onSelected: (value) async {
+                if (value == 'profile' && _psychiatristDetails != null) {
+                  final id = _psychiatristDetails!['ID'];
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (_) => PsychiatristDetailsScreen(psychiatristID: id),
+                    ),
+                  );
+                } else if (value == 'logout') {
+                  await _handleLogout();
+                }
+              },
+              itemBuilder:
+                  (context) => const [
+                    PopupMenuItem(
+                      value: 'profile',
+                      child: Text('View Profile'),
+                    ),
+                    PopupMenuItem(value: 'logout', child: Text('Logout')),
+                  ],
+            ),
+          ],
+        ),
+        body: Padding(
+          padding: const EdgeInsets.only(top: 13.0),
+          child:
+              isMobile
+                  ? MobileLayout(
+                    selectedIndex: _selectedIndex,
+                    onNavTap: _onNavTap,
+                    screen: _screens[_selectedIndex],
+                    navigationItems: const [
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.dashboard_outlined),
+                        activeIcon: Icon(Icons.dashboard_rounded),
+                        label: 'Dashboard',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.person_outline),
+                        activeIcon: Icon(Icons.person),
+                        label: 'Patients',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.event_outlined),
+                        activeIcon: Icon(Icons.event),
+                        label: 'Sessions',
+                      ),
+                    ],
+                  )
+                  : DesktopLayout(
+                    primaryScreen: _screens[_selectedIndex],
+                    sidebar: sidebar,
+                  ),
+        ),
+        floatingActionButton: _buildFAB(),
+      ),
+    );
+  }
+}
+
+class FabConfig {
+  final IconData icon;
+  final String label;
+  final Future<void> Function() onPressed;
+
+  FabConfig({required this.icon, required this.label, required this.onPressed});
 }

@@ -2,8 +2,8 @@ package handler
 
 import (
 	"depression-diagnosis-system/api/controller"
-	interfaces "depression-diagnosis-system/api/interface"
-	"depression-diagnosis-system/api/util"
+	"depression-diagnosis-system/api/interfaces"
+	"depression-diagnosis-system/database/model"
 	"net/http"
 	"strconv"
 
@@ -11,74 +11,82 @@ import (
 )
 
 type SessionSummaryHandler struct {
-	SessionSummaryController interfaces.SessionSummary
+	SessionSummaryController interfaces.SessionSummaryInterface
 }
 
-func NesSessionSummaryHandler() *SessionSummaryHandler {
+func NewSessionSummaryHandler() *SessionSummaryHandler {
 	return &SessionSummaryHandler{
 		SessionSummaryController: controller.NewSessionSummaryController(),
 	}
 }
 
-func (ssh *SessionSummaryHandler) CreateSummaryForSession(c *gin.Context) {
-	var request struct {
+func (ssh *SessionSummaryHandler) CreateSessionSummary(c *gin.Context) {
+	var req struct {
 		Notes string `json:"notes" binding:"required"`
 	}
 
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, util.ResponseStructure{
-			Status:  http.StatusBadRequest,
-			Message: "error: " + err.Error(),
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  http.StatusBadRequest,
+			"message": "Invalid input: " + err.Error(),
 		})
 		return
 	}
 
-		sessionID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	sessionID, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, util.ResponseStructure{
-			Status:  http.StatusBadRequest,
-			Message: "Invalid session ID",
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  http.StatusBadRequest,
+			"message": "Invalid session ID",
 		})
 		return
 	}
 
-	createdSessionSummary, err := ssh.SessionSummaryController.CreateSummaryForSession(uint(sessionID), request.Notes)
+	summary := &model.SessionSummary{
+		SessionID: uint(sessionID),
+		Notes:     req.Notes,
+	}
+
+	created, err := ssh.SessionSummaryController.CreateSessionSummary(summary)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, util.ResponseStructure{
-			Status:  http.StatusInternalServerError,
-			Message: "error: " + err.Error(),
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  http.StatusInternalServerError,
+			"message": "Failed to create session summary: " + err.Error(),
 		})
 		return
 	}
 
-	
 	c.JSON(http.StatusCreated, gin.H{
-		"message": "Session created successfully",
-		"session": gin.H{
-			"SessionID": createdSessionSummary.SessionID,
-			"Notes":     createdSessionSummary.Notes,
+		"status":  http.StatusCreated,
+		"message": "Session summary created successfully",
+		"summary": gin.H{
+			"sessionID": created.SessionID,
+			"notes":     created.Notes,
 		},
 	})
 }
 
-func (ssh *SessionSummaryHandler) GetSummaryForSession(c *gin.Context) {
+func (ssh *SessionSummaryHandler) GetSessionSummary(c *gin.Context) {
 	sessionID, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, util.ResponseStructure{
-			Status:  http.StatusBadRequest,
-			Message: "Invalid session ID",
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  http.StatusBadRequest,
+			"message": "Invalid session ID",
 		})
 		return
 	}
 
-	sessionSummary, err := ssh.SessionSummaryController.GetSummaryForSession(uint(sessionID))
+	summary, err := ssh.SessionSummaryController.GetSessionSummaryBySessionID(uint(sessionID))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, util.ResponseStructure{
-			Status:  http.StatusInternalServerError,
-			Message: "error: could not retrieve session",
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  http.StatusInternalServerError,
+			"message": "Failed to retrieve session summary: " + err.Error(),
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"sessionSummary": sessionSummary})
+	c.JSON(http.StatusOK, gin.H{
+		"status":  http.StatusOK,
+		"summary": summary,
+	})
 }

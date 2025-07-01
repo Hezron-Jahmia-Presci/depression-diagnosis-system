@@ -1,22 +1,23 @@
 import 'package:flutter/material.dart';
-
-import '../../../../service/patient_service.dart' show PatientService;
-import '../../../../widget/widget_exporter.dart' show ReusableCardWidget;
-import 'patient_details_creen.dart' show PatientDetailsScreen;
-import 'register_patient_screen.dart' show RegisterPatientScreen;
+import 'package:depression_diagnosis_system/service/lib/patient_service.dart';
+import '../../../../widget/widget_exporter.dart';
+import '../../../screens_exporter.dart';
 
 class PatientScreen extends StatefulWidget {
-  const PatientScreen({super.key});
+  final void Function(bool isVisible)? onFabVisibilityChanged;
+
+  const PatientScreen({super.key, this.onFabVisibilityChanged});
 
   @override
-  State<PatientScreen> createState() => _PatientScreenState();
+  State<PatientScreen> createState() => PatientScreenState();
 }
 
-class _PatientScreenState extends State<PatientScreen> {
-  final PatientService _patientService = PatientService();
-  List<dynamic>? _patients;
+class PatientScreenState extends State<PatientScreen> {
+  final _patientService = PatientService();
+  List<Map<String, dynamic>> _patients = [];
   bool _isLoading = true;
   bool _hasError = false;
+  int? _selectedPatientID;
 
   @override
   void initState() {
@@ -27,18 +28,12 @@ class _PatientScreenState extends State<PatientScreen> {
   Future<void> _loadPatients() async {
     try {
       final patients = await _patientService.getPatientsByPsychiatrist();
-      if (patients != null) {
-        setState(() {
-          _patients = patients;
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _hasError = true;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
+      setState(() {
+        _patients = patients;
+        _hasError = false;
+        _isLoading = false;
+      });
+    } catch (_) {
       setState(() {
         _hasError = true;
         _isLoading = false;
@@ -46,70 +41,61 @@ class _PatientScreenState extends State<PatientScreen> {
     }
   }
 
-  void _navigateToCreatePatientScreen() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const RegisterPatientScreen()),
-    );
+  Future<void> reload() async {
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+      _selectedPatientID = null;
+    });
+    await _loadPatients();
   }
 
   void _navigateToPatientDetailsScreen(int patientID) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => PatientDetailsScreen(patientID: patientID),
-      ),
-    );
+    widget.onFabVisibilityChanged?.call(false); // 👈 hide FAB
+    setState(() => _selectedPatientID = patientID);
+  }
+
+  void _goBackToList() {
+    widget.onFabVisibilityChanged?.call(true); // 👈 show FAB
+    setState(() => _selectedPatientID = null);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text(
-          'PATIENTS',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-      ),
-      body:
-          _isLoading
-              ? Center(child: CircularProgressIndicator())
-              : _hasError
-              ? Center(child: Text('Error fetching details'))
-              : Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 21,
-                  vertical: 13,
-                ),
-                child:
-                    _isLoading
-                        ? const Center(child: CircularProgressIndicator())
-                        : _patients!.isEmpty
-                        ? const Center(child: Text('No patients found'))
-                        : _buildPatientList(),
-              ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _navigateToCreatePatientScreen,
-        icon: const Icon(Icons.edit_note_outlined),
-        label: const Text("Register Patient"),
-      ),
-    );
-  }
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-  Widget _buildPatientList() {
-    return ListView.builder(
-      itemCount: _patients!.length,
+    if (_hasError) {
+      return const Center(child: Text('Failed to fetch patients.'));
+    }
+
+    if (_selectedPatientID != null) {
+      return PatientDetailsScreen(
+        patientID: _selectedPatientID!,
+        onBack: _goBackToList,
+      );
+    }
+
+    if (_patients.isEmpty) {
+      return const Center(
+        child: Text('No patients found. Tap the "+" button to add one.'),
+      );
+    }
+
+    return ListView.separated(
+      itemCount: _patients.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
-        final patient = _patients![index];
+        final patient = _patients[index];
         return ReusableCardWidget(
           child: ListTile(
             title: Text(
               "${patient['first_name'] ?? ''} ${patient['last_name'] ?? ''}",
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
-            subtitle: Text("Email: ${patient['email'] ?? ''}"),
-            trailing: const Icon(Icons.arrow_forward_ios),
+            subtitle: Text("Email: ${patient['email'] ?? 'N/A'}"),
+            trailing: const Icon(Icons.arrow_forward_ios_rounded),
             onTap: () => _navigateToPatientDetailsScreen(patient['ID']),
           ),
         );

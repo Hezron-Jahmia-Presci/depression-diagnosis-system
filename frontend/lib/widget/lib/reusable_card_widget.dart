@@ -8,13 +8,22 @@ class ReusableCardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return Card(
-      elevation: 2,
-      shadowColor: colorScheme.primaryContainer.withAlpha(100),
-      color: colorScheme.onPrimary,
+
+    return Container(
       margin: const EdgeInsets.only(bottom: 21),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(padding: const EdgeInsets.all(13), child: child),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 24,
+            spreadRadius: 5,
+            offset: const Offset(0, 13),
+          ),
+        ],
+      ),
+      child: Padding(padding: const EdgeInsets.all(24), child: child),
     );
   }
 }

@@ -1,37 +1,39 @@
 package controller
 
 import (
-	interfaces "depression-diagnosis-system/api/interface"
+	"depression-diagnosis-system/api/interfaces"
 	"depression-diagnosis-system/database"
 	"depression-diagnosis-system/database/model"
+	"errors"
+
+	"gorm.io/gorm"
 )
 
+type SessionSummaryController struct{}
 
-type SessionSummaryController struct {}
-
-func NewSessionSummaryController() interfaces.SessionSummary {
-	return &SessionSummaryController {}
+func NewSessionSummaryController() interfaces.SessionSummaryInterface {
+	return &SessionSummaryController{}
 }
 
-func (ssc *SessionSummaryController) CreateSummaryForSession(sessionID uint, notes string) (*model.SessionSummary, error) {
-	sessionSummary := model.SessionSummary{
-		SessionID: sessionID,
-		Notes: notes,
+func (ssc *SessionSummaryController) CreateSessionSummary(summary *model.SessionSummary) (*model.SessionSummary, error) {
+	if summary.SessionID == 0 || summary.Notes == "" {
+		return nil, errors.New("session ID and notes are required")
 	}
 
-	if err := database.DB.Create(&sessionSummary).Error; err != nil {
+	if err := database.DB.Create(summary).Error; err != nil {
 		return nil, err
 	}
-	return &sessionSummary, nil
+	return summary, nil
 }
 
-func (ssc *SessionSummaryController) GetSummaryForSession(sessionID uint) (*model.SessionSummary, error) {
-	var sessionSummary model.SessionSummary
-	err := database.DB.Preload("Session").First(&sessionSummary, sessionID).Error
-
-	if err != nil {
+func (ssc *SessionSummaryController) GetSessionSummaryBySessionID(sessionID uint) (*model.SessionSummary, error) {
+	var summary model.SessionSummary
+	if err := database.DB.Preload("Session").Where("session_id = ?", sessionID).First(&summary).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
-
-	return &sessionSummary, nil
+	
+	return &summary, nil
 }

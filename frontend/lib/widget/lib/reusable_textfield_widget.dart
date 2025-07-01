@@ -20,6 +20,7 @@ class ReusableTextFieldWidget extends StatelessWidget {
     this.suffixIcon,
     this.readOnly = false,
     this.expands = false,
+    required List<String> autofillHints,
   });
 
   @override

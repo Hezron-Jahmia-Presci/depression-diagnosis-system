@@ -1,37 +1,40 @@
 import 'package:flutter/material.dart';
-
-import '../../../../service/session_service.dart' show SessionService;
-import '../../../../widget/widget_exporter.dart' show ReusableCardWidget;
-import 'create_session_screen.dart' show CreateSessionScreen;
-import 'session_details_screen.dart' show SessionDetailsScreen;
+import 'package:depression_diagnosis_system/service/lib/session_service.dart';
+import '../../../../widget/widget_exporter.dart';
+import '../../../screens_exporter.dart';
 
 class SessionScreen extends StatefulWidget {
-  const SessionScreen({super.key});
+  final void Function(bool isVisible)? onFabVisibilityChanged;
+
+  const SessionScreen({super.key, this.onFabVisibilityChanged});
 
   @override
-  State<SessionScreen> createState() => _SessionScreenState();
+  State<SessionScreen> createState() => SessionScreenState();
 }
 
-class _SessionScreenState extends State<SessionScreen> {
+class SessionScreenState extends State<SessionScreen> {
   final SessionService _sessionService = SessionService();
-  List<dynamic>? _sessions;
+
+  List<Map<String, dynamic>> _sessions = [];
   bool _isLoading = true;
   bool _hasError = false;
+  int? _selectedSessionId;
 
   @override
   void initState() {
     super.initState();
-    _loadSessions();
+    _fetchSessions();
   }
 
-  Future<void> _loadSessions() async {
+  Future<void> _fetchSessions() async {
     try {
-      final sessions = await _sessionService.getSessionsByPsychiatrist();
+      final results = await _sessionService.getSessionsByPsychiatrist();
       setState(() {
-        _sessions = sessions;
+        _sessions = results;
+        _hasError = false;
         _isLoading = false;
       });
-    } catch (e) {
+    } catch (_) {
       setState(() {
         _hasError = true;
         _isLoading = false;
@@ -39,65 +42,58 @@ class _SessionScreenState extends State<SessionScreen> {
     }
   }
 
-  void _navigateToCreateSessionScreen() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const CreateSessionScreen()),
-    );
-    _loadSessions();
+  Future<void> reload() async {
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+      _selectedSessionId = null;
+    });
+    await _fetchSessions();
+  }
+
+  void _selectSession(int sessionId) {
+    widget.onFabVisibilityChanged?.call(false); // 👈 hide FAB
+    setState(() => _selectedSessionId = sessionId);
+  }
+
+  void _goBackToList() {
+    widget.onFabVisibilityChanged?.call(true); // 👈 show FAB again
+    setState(() => _selectedSessionId = null);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text(
-          'SESSIONS',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-      ),
-      body:
-          _isLoading
-              ? Center(child: CircularProgressIndicator())
-              : _hasError
-              ? Center(child: Text('Error fetching sessions'))
-              : Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 21,
-                  vertical: 13,
-                ),
-                child: _buildSessionList(),
-              ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _navigateToCreateSessionScreen,
-        icon: const Icon(Icons.add_to_queue_outlined),
-        label: const Text("Start New Session"),
-      ),
-    );
-  }
+    if (_isLoading) return const Center(child: CircularProgressIndicator());
+    if (_hasError) return const Center(child: Text('Failed to load sessions.'));
 
-  Widget _buildSessionList() {
-    return ListView.builder(
-      itemCount: _sessions!.length,
+    if (_selectedSessionId != null) {
+      return SessionDetailsScreen(
+        sessionID: _selectedSessionId!,
+        onBack: _goBackToList,
+      );
+    }
+
+    if (_sessions.isEmpty) {
+      return const Center(
+        child: Text('No sessions found. Tap the "+" button to add one.'),
+      );
+    }
+
+    return ListView.separated(
+      itemCount: _sessions.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 10),
       itemBuilder: (context, index) {
-        final session = _sessions![index];
+        final session = _sessions[index];
+        final date = session['date'] ?? 'Unknown';
+        final status = session['status'] ?? 'Unknown';
+        final id = session['ID'];
+
         return ReusableCardWidget(
           child: ListTile(
-            title: Text("Session on: ${session['date']}"),
-            subtitle: Text("Status: ${session['status']}"),
+            title: Text("Session on: $date"),
+            subtitle: Text("Status: $status"),
             trailing: const Icon(Icons.arrow_forward_ios),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder:
-                      (context) =>
-                          SessionDetailsScreen(sessionID: session['ID']),
-                ),
-              );
-            },
+            onTap: id != null ? () => _selectSession(id) : null,
           ),
         );
       },
