@@ -129,7 +129,7 @@ class _EditAdminDetailsScreenState extends State<EditAdminDetailsScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 55),
         ReusableTextFieldWidget(
           controller: _firstNameController,
           label: 'First Name',

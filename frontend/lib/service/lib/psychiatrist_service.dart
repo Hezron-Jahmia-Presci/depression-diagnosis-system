@@ -99,7 +99,7 @@ class PsychiatristService extends BaseService {
     try {
       final token = await getAuthToken();
       final response = await http.put(
-        url('psychiatrists/'),
+        url('psychiatrists/update'),
         headers: headersWithToken(token),
         body: jsonEncode(data),
       );
@@ -120,7 +120,7 @@ class PsychiatristService extends BaseService {
     try {
       final token = await getAuthToken();
       final response = await http.get(
-        url('psychiatrists/'),
+        url('psychiatrists/all'),
         headers: headersWithToken(token),
       );
 

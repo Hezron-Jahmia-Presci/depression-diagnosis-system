@@ -30,7 +30,7 @@ class PatientService extends BaseService {
     try {
       final token = await getAuthToken();
       final response = await http.get(
-        url('patients'),
+        url('patients/all'),
         headers: headersWithToken(token),
       );
 
@@ -67,7 +67,7 @@ class PatientService extends BaseService {
     try {
       final token = await getAuthToken();
       final response = await http.put(
-        url('patients'),
+        url('patients/update'),
         headers: headersWithToken(token),
         body: jsonEncode(data),
       );

@@ -20,26 +20,6 @@ class SessionService extends BaseService {
         };
   }
 
-  Future<Map<String, dynamic>> createFollowUpSession(
-    String originalSessionID,
-    String date,
-  ) async {
-    final token = await getAuthToken();
-    final response = await http.post(
-      url('sessions/followup'),
-      headers: headersWithToken(token),
-      body: jsonEncode({'originalSessionID': originalSessionID, 'date': date}),
-    );
-
-    final body = jsonDecode(response.body);
-    return response.statusCode == 201
-        ? body
-        : {
-          'error': body['message'] ?? 'Failed to create follow-up session',
-          'statusCode': response.statusCode,
-        };
-  }
-
   Future<Map<String, dynamic>?> updateSessionStatus(
     int sessionID,
     String status,
@@ -78,7 +58,7 @@ class SessionService extends BaseService {
   Future<List<Map<String, dynamic>>> getAllSessions() async {
     final token = await getAuthToken();
     final response = await http.get(
-      url('sessions/'),
+      url('sessions/all'),
       headers: headersWithToken(token),
     );
 

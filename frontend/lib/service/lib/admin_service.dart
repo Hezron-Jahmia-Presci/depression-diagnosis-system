@@ -68,7 +68,7 @@ class AdminService extends BaseService {
     try {
       final token = await getAuthToken();
       final response = await http.get(
-        url('admin'),
+        url('admin/me'),
         headers: headersWithToken(token),
       );
 
@@ -90,7 +90,7 @@ class AdminService extends BaseService {
     try {
       final token = await getAuthToken();
       final response = await http.put(
-        url('admin'),
+        url('admin/update'),
         headers: headersWithToken(token),
         body: jsonEncode(data),
       );
@@ -113,7 +113,7 @@ class AdminService extends BaseService {
     try {
       final token = await getAuthToken();
       final response = await http.delete(
-        url('admin'),
+        url('admin/delete'),
         headers: headersWithToken(token),
       );
 

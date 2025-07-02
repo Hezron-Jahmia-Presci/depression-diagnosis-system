@@ -22,9 +22,9 @@ func Routes(router *gin.Engine) {
 		adminRoutes.POST("/login", adminHandler.LogInAdmin)
 		adminRoutes.POST("/create", adminHandler.CreateAdmin)
 		adminRoutes.POST("/logout", middleware.AuthMiddleware(), adminHandler.LogOutAdmin)
-		adminRoutes.GET("/", middleware.AuthMiddleware(), adminHandler.GetAdminByID)
-		adminRoutes.PUT("/", middleware.AuthMiddleware(), adminHandler.UpdateAdmin)
-		adminRoutes.DELETE("/", middleware.AuthMiddleware(), adminHandler.DeleteAdmin)
+		adminRoutes.GET("/me", middleware.AuthMiddleware(), adminHandler.GetAdminByID)
+		adminRoutes.PUT("/update", middleware.AuthMiddleware(), adminHandler.UpdateAdmin)
+		adminRoutes.DELETE("/delete", middleware.AuthMiddleware(), adminHandler.DeleteAdmin)
 	}
 
 	// ------------------- Psychiatrist Routes -------------------
@@ -34,10 +34,10 @@ func Routes(router *gin.Engine) {
 		psychRoutes.POST("/logout", middleware.AuthMiddleware(), psychHandler.LogOutPsychiatrist)
 
 		psychRoutes.POST("/create", psychHandler.CreatePsychiatrist)
-		psychRoutes.GET("/", middleware.AuthMiddleware(), psychHandler.GetAllPsychiatrists)
+		psychRoutes.GET("/all", middleware.AuthMiddleware(), psychHandler.GetAllPsychiatrists)
 		psychRoutes.GET("/me", middleware.AuthMiddleware(), psychHandler.GetPsychiatristByID)
-		psychRoutes.PUT("/", middleware.AuthMiddleware(), psychHandler.UpdatePsychiatrist)
-		psychRoutes.DELETE("/", middleware.AuthMiddleware(), psychHandler.DeletePsychiatrist)
+		psychRoutes.PUT("/update", middleware.AuthMiddleware(), psychHandler.UpdatePsychiatrist)
+		psychRoutes.DELETE("/delete", middleware.AuthMiddleware(), psychHandler.DeletePsychiatrist)
 	}
 
 	// ------------------- Patient Routes -------------------
@@ -45,11 +45,11 @@ func Routes(router *gin.Engine) {
 	patientRoutes.Use(middleware.AuthMiddleware())
 	{
 		patientRoutes.POST("/create", patientHandler.CreatePatient)
-		patientRoutes.GET("/", patientHandler.GetAllPatients)
+		patientRoutes.GET("/all", patientHandler.GetAllPatients)
 		patientRoutes.GET("/mine", patientHandler.GetPatientsByPsychiatrist)
 		patientRoutes.GET("/:id", patientHandler.GetPatientByID)
 		patientRoutes.GET("/:id/by-psych", patientHandler.GetPatientByPsychiatrist)
-		patientRoutes.PUT("/", patientHandler.UpdatePatient)
+		patientRoutes.PUT("/update", patientHandler.UpdatePatient)
 		patientRoutes.DELETE("/:id", patientHandler.DeletePatient)
 	}
 
@@ -81,9 +81,8 @@ func Routes(router *gin.Engine) {
 	sessionRoutes.Use(middleware.AuthMiddleware())
 	{
 		sessionRoutes.POST("/create", sessionHandler.CreateSession)
-		sessionRoutes.POST("/followup", sessionHandler.CreateFollowUpSession)
 		sessionRoutes.PUT("/status", sessionHandler.UpdateSessionStatus)
-		sessionRoutes.GET("/", sessionHandler.GetAllSessions)
+		sessionRoutes.GET("/all", sessionHandler.GetAllSessions)
 		sessionRoutes.GET("/mine", sessionHandler.GetSessionsByPsychiatrist)
 		sessionRoutes.GET("/:id", sessionHandler.GetSessionByID)
 	}
