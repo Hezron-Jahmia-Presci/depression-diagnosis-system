@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"depression-diagnosis-system/api/util"
 	"errors"
 	"net/http"
 	"os"
@@ -10,7 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt"
 )
 
 var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
@@ -40,23 +39,21 @@ func AuthMiddleware() gin.HandlerFunc {
 	return func (c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			c.JSON(
-				http.StatusUnauthorized, 
-				util.ResponseStructure{
-					Status: http.StatusUnauthorized,
-					Message: "error : Authorization header required.",
-				},
-			)
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"status":  http.StatusUnauthorized,
+				"message": "error : Authorization header required.",
+			})
+			
 			c.Abort()
 			return
 		}
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 		if IsTokenBlacklisted(tokenString) {
 			c.JSON(
-				http.StatusUnauthorized, 
-				util.ResponseStructure{
-					Status: http.StatusUnauthorized,
-					Message: "error : Authorization header required.",
+				http.StatusUnauthorized,
+				gin.H{
+					"status":  http.StatusUnauthorized,
+					"message": "error : Token is blacklisted.",
 				},
 			)
 			c.Abort()
@@ -69,13 +66,12 @@ func AuthMiddleware() gin.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
-			c.JSON(
-				http.StatusUnauthorized, 
-				util.ResponseStructure{
-					Status: http.StatusUnauthorized,
-					Message: "error : Invalid or expired token.",
-				},
-			)
+			
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"status":  http.StatusUnauthorized,
+				"message": "error : Invalid token.",
+			})
+			
 			c.Abort()
 			return
 		}

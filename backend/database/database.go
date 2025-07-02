@@ -34,21 +34,20 @@ func Conn() {
 
 func DBMigrate() {
 	if err := DB.AutoMigrate(
-		&model.Psychiatrist{},
+		&model.Admin{},
 		&model.Patient{},
 		&model.Session{},
-		&model.SessionSummary{},
+		&model.Diagnosis{},
 		&model.Phq9Question{},
 		&model.Phq9Response{},
-		&model.Diagnosis{},
+		&model.Psychiatrist{},
+		&model.SessionSummary{},
 		); err != nil {
 		log.Fatalf("❌ Error migrating database: %v\n", err)
 	} else {
 		log.Println("✅ Database migration successful")
 	}
 }
-
-
 
 func SeedPHQ9Questions() {
     questions := []model.Phq9Question{

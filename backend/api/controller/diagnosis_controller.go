@@ -1,11 +1,14 @@
 package controller
 
 import (
-	interfaces "depression-diagnosis-system/api/interface"
+	"depression-diagnosis-system/api/interfaces"
 	"depression-diagnosis-system/api/util"
 	"depression-diagnosis-system/database"
 	"depression-diagnosis-system/database/model"
 	"encoding/json"
+	"errors"
+
+	"gorm.io/gorm"
 )
 
 type DiagnosisController struct{}
@@ -14,45 +17,46 @@ func NewDiagnosisController() interfaces.DiagnosisInterface {
 	return &DiagnosisController{}
 }
 
+func (dc *DiagnosisController) CreateDiagnosis(diagnosis *model.Diagnosis) (*model.Diagnosis, error) {
+	if diagnosis.SessionID == 0 {
+		return nil, errors.New("session ID is required")
+	}
 
-func (dc *DiagnosisController) CreateDiagnosis(sessionID uint) (*model.Diagnosis, error) {
 	var phq9Responses []model.Phq9Response
-	if err := database.DB.Where("session_id = ?", sessionID).Find(&phq9Responses).Error; err != nil {
+	if err := database.DB.Where("session_id = ?", diagnosis.SessionID).Find(&phq9Responses).Error; err != nil {
 		return nil, err
 	}
 
-
-	phq9Score := 0
+	totalScore := 0
 	for _, response := range phq9Responses {
 		var responseStructs []model.Phq9ResponseStruct
 		if err := json.Unmarshal(response.Responses, &responseStructs); err != nil {
 			return nil, err
 		}
 
-		for _, resp := range responseStructs {
-			phq9Score += resp.Response
+		for _, r := range responseStructs {
+			totalScore += r.Response
 		}
 	}
 
-	calculatedSeverity := util.DetermineSeverity(phq9Score)
+	diagnosis.Phq9Score = totalScore
+	diagnosis.Severity = util.DetermineSeverity(totalScore)
 
-	diagnosis := model.Diagnosis{
-		SessionID: sessionID,
-		Phq9Score: phq9Score,
-		Severity:  calculatedSeverity,
-	}
-
-	if err := database.DB.Create(&diagnosis).Error; err != nil {
+	if err := database.DB.Create(diagnosis).Error; err != nil {
 		return nil, err
 	}
 
-	return &diagnosis, nil
+	return diagnosis, nil
 }
 
 func (dc *DiagnosisController) GetDiagnosisBySessionID(sessionID uint) (*model.Diagnosis, error) {
 	var diagnosis model.Diagnosis
 	if err := database.DB.Where("session_id = ?", sessionID).First(&diagnosis).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
+	
 	return &diagnosis, nil
 }

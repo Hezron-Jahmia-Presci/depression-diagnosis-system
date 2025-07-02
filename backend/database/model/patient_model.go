@@ -7,7 +7,6 @@ type Patient struct {
 	FirstName      string      `gorm:"not null" json:"first_name"`
 	LastName       string      `gorm:"not null" json:"last_name"`
 	Email          string      `gorm:"not null;uniqueIndex" json:"email"`
-	PasswordHash   string      `gorm:"not null" json:"-"`
 	PsychiatristID uint        `gorm:"not null;index" json:"psychiatrist_id"`
 	Psychiatrist   Psychiatrist `gorm:"foreignKey:PsychiatristID"`
 }

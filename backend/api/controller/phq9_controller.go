@@ -1,11 +1,15 @@
 package controller
 
 import (
-	interfaces "depression-diagnosis-system/api/interface"
+	"encoding/json"
+	"errors"
+	"fmt"
+
+	"depression-diagnosis-system/api/interfaces"
 	"depression-diagnosis-system/database"
 	"depression-diagnosis-system/database/model"
-	"encoding/json"
-	"fmt"
+
+	"gorm.io/gorm"
 )
 
 type Phq9Controller struct{}
@@ -14,11 +18,21 @@ func NewPhq9Controller() interfaces.Phq9Interface {
 	return &Phq9Controller{}
 }
 
+// Question management
+
 func (pqc *Phq9Controller) CreateQuestion(question *model.Phq9Question) (*model.Phq9Question, error) {
 	if err := database.DB.Create(question).Error; err != nil {
 		return nil, err
 	}
 	return question, nil
+}
+
+func (pqc *Phq9Controller) GetQuestionByID(id uint) (*model.Phq9Question, error) {
+	var question model.Phq9Question
+	if err := database.DB.First(&question, id).Error; err != nil {
+		return nil, err
+	}
+	return &question, nil
 }
 
 func (pqc *Phq9Controller) GetAllQuestions() ([]model.Phq9Question, error) {
@@ -29,37 +43,35 @@ func (pqc *Phq9Controller) GetAllQuestions() ([]model.Phq9Question, error) {
 	return questions, nil
 }
 
-func (pqc *Phq9Controller) GetQuestionByID(questionID uint) (*model.Phq9Question, error) {
-	var question model.Phq9Question
-	if err := database.DB.Where("id = ?", questionID).Find(&question).Error; err != nil {
-		return nil, err
-	}
-	return &question, nil
-}
+// Response management
 
-func (pqc *Phq9Controller) GetResponsesBySession(sessionID uint) (*model.Phq9Response, error) {
-	var response model.Phq9Response
-	if err := database.DB.Where("session_id = ?", sessionID).First(&response).Error; err != nil {
-		return nil, err
+func (pqc *Phq9Controller) RecordResponses(sessionID uint, responses []model.Phq9ResponseStruct) (*model.Phq9Response, error) {
+	if sessionID == 0 || len(responses) == 0 {
+		return nil, errors.New("sessionID and responses are required")
 	}
-	return &response, nil
-}
 
-func (pqc *Phq9Controller) RecordResponsesForSession(sessionID uint, responses []model.Phq9ResponseStruct) (*model.Phq9Response, error) {
-	for _, response := range responses {
-		if response.QuestionID == 0 || response.Response == 0 {
-			return nil, fmt.Errorf("invalid response data: missing question_id or response")
+	// 🔒 Prevent duplicate response submissions
+	var existing model.Phq9Response
+	if err := database.DB.Where("session_id = ?", sessionID).First(&existing).Error; err == nil {
+		return nil, fmt.Errorf("PHQ-9 responses already recorded for session %d", sessionID)
+	}
+
+	// Validate response content
+	for _, r := range responses {
+		if r.QuestionID == 0 {
+			return nil, fmt.Errorf("invalid response data: missing question ID")
 		}
 	}
 
-	responsesJSON, err := json.Marshal(responses)
+	// Encode JSON and create new response
+	responseJSON, err := json.Marshal(responses)
 	if err != nil {
 		return nil, err
 	}
 
 	response := &model.Phq9Response{
 		SessionID: sessionID,
-		Responses: responsesJSON,
+		Responses: responseJSON,
 	}
 
 	if err := database.DB.Create(response).Error; err != nil {
@@ -69,17 +81,28 @@ func (pqc *Phq9Controller) RecordResponsesForSession(sessionID uint, responses [
 	return response, nil
 }
 
-func (pqc *Phq9Controller) GetResponsesForSession(sessionID uint) ([]model.Phq9ResponseStruct, error) {
+func (pqc *Phq9Controller) GetResponses(sessionID uint) ([]model.Phq9ResponseStruct, error) {
+	var response model.Phq9Response
+	if err := database.DB.Where("session_id = ?", sessionID).First(&response).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return []model.Phq9ResponseStruct{}, nil
+		}
+		return nil, err
+	}
+	
+
+	var responseStructs []model.Phq9ResponseStruct
+	if err := json.Unmarshal(response.Responses, &responseStructs); err != nil {
+		return nil, err
+	}
+
+	return responseStructs, nil
+}
+
+func (pqc *Phq9Controller) GetResponseSummary(sessionID uint) (*model.Phq9Response, error) {
 	var response model.Phq9Response
 	if err := database.DB.Where("session_id = ?", sessionID).First(&response).Error; err != nil {
 		return nil, err
 	}
-
-	var responses []model.Phq9ResponseStruct
-	err := json.Unmarshal(response.Responses, &responses)
-	if err != nil {
-		return nil, err
-	}
-
-	return responses, nil
+	return &response, nil
 }
