@@ -4,8 +4,7 @@ import '../../../../widget/widget_exporter.dart';
 import '../../../screens_exporter.dart';
 
 class PsychiatristDetailsScreen extends StatefulWidget {
-  final int psychiatristID;
-  const PsychiatristDetailsScreen({super.key, required this.psychiatristID});
+  const PsychiatristDetailsScreen({super.key});
 
   @override
   State<PsychiatristDetailsScreen> createState() =>
@@ -17,6 +16,7 @@ class _PsychiatristDetailsScreenState extends State<PsychiatristDetailsScreen> {
   Map<String, dynamic>? _psychiatristDetails;
   bool _isLoading = true;
   bool _hasError = false;
+  int? _selectedPsychiatristID;
 
   @override
   void initState() {
@@ -40,69 +40,58 @@ class _PsychiatristDetailsScreenState extends State<PsychiatristDetailsScreen> {
     }
   }
 
-  void _goToEditScreen() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const EditPsychiatristDetailsScreen()),
-    );
+  Future<void> reload() async {
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+      _selectedPsychiatristID = null;
+    });
+    await _loadPsychiatristDetails();
+  }
+
+  void _goToEditScreen(int psychiatristID) {
+    setState(() => _selectedPsychiatristID = psychiatristID);
+  }
+
+  void _goBackToList() {
+    setState(() => _selectedPsychiatristID = null);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Profile',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        leading:
-            Navigator.canPop(context)
-                ? IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded),
-                  onPressed: () => Navigator.pop(context),
-                )
-                : null,
-      ),
-      body:
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _hasError || _psychiatristDetails == null
-              ? const Center(child: Text('Error loading psychiatrist details'))
-              : _buildProfileView(),
-    );
-  }
+    if (_isLoading) return const Center(child: CircularProgressIndicator());
 
-  Widget _buildProfileView() {
+    if (_hasError || _psychiatristDetails == null) {
+      return const Center(child: Text('Error fetching patient details'));
+    }
+
+    if (_selectedPsychiatristID != null) {
+      return EditPsychiatristDetailsScreen(
+        psychiatristID: _selectedPsychiatristID!,
+        onBack: _goBackToList,
+      );
+    }
+
     final psych = _psychiatristDetails!;
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              ReusableCardWidget(
-                child: Text('First Name: ${psych['first_name'] ?? 'N/A'}'),
-              ),
-              const SizedBox(height: 12),
-              ReusableCardWidget(
-                child: Text('Last Name: ${psych['last_name'] ?? 'N/A'}'),
-              ),
-              const SizedBox(height: 12),
-              ReusableCardWidget(
-                child: Text('Email: ${psych['email'] ?? 'N/A'}'),
-              ),
-              const SizedBox(height: 24),
-              ReusableButtonWidget(
-                text: 'Edit Details',
-                isLoading: false,
-                onPressed: _goToEditScreen,
-              ),
-            ],
-          ),
+
+    return ListView(
+      children: [
+        ReusableCardWidget(
+          child: Text('First Name: ${psych['first_name'] ?? 'N/A'}'),
         ),
-      ),
+        const SizedBox(height: 12),
+        ReusableCardWidget(
+          child: Text('Last Name: ${psych['last_name'] ?? 'N/A'}'),
+        ),
+        const SizedBox(height: 12),
+        ReusableCardWidget(child: Text('Email: ${psych['email'] ?? 'N/A'}')),
+        const SizedBox(height: 24),
+        ReusableButtonWidget(
+          text: 'Edit Details',
+          isLoading: false,
+          onPressed: () => _goToEditScreen(psych['ID']),
+        ),
+      ],
     );
   }
 }

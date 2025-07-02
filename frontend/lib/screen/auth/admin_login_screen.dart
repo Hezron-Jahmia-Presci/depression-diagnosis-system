@@ -19,7 +19,9 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final AdminService _adminService = AdminService();
+
   bool _isSubmitting = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -85,13 +87,23 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
               ReusableTextFieldWidget(
                 controller: _passwordController,
                 label: 'Password',
-                obscureText: true,
+                obscureText: _obscurePassword,
                 autofillHints: const [AutofillHints.password],
                 validator:
                     (value) =>
                         value != null && value.length < 6
                             ? 'Password must be at least 6 characters'
                             : null,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _obscurePassword = !_obscurePassword;
+                    });
+                  },
+                ),
               ),
               const SizedBox(height: 24),
               ReusableButtonWidget(

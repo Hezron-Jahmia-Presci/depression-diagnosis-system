@@ -7,6 +7,7 @@ export 'home/admin/admin_details_screen.dart';
 export 'home/admin/edit_admin_details_screen.dart';
 export 'home/admin/admin_patient_screen.dart';
 export 'home/admin/admin_psychiatrist_screen.dart';
+export './home/admin/admin_psychiatrist_details_screen.dart';
 export 'home/admin/admin_session_screen.dart';
 
 export './home/psychiatrist/dashboard_screen.dart';

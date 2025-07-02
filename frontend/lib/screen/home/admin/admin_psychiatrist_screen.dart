@@ -17,6 +17,7 @@ class _AdminPsychiatristScreenState extends State<AdminPsychiatristScreen> {
   List<Map<String, dynamic>> _psychiatrists = [];
   bool _isLoading = true;
   bool _hasError = false;
+  int? _selectedPsychiatristID;
 
   @override
   void initState() {
@@ -41,13 +42,15 @@ class _AdminPsychiatristScreenState extends State<AdminPsychiatristScreen> {
   }
 
   void _openPsychiatristDetails(int psychiatristID) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder:
-            (_) => PsychiatristDetailsScreen(psychiatristID: psychiatristID),
-      ),
-    );
+    setState(() {
+      _selectedPsychiatristID = psychiatristID;
+    });
+  }
+
+  void _goBackToList() {
+    setState(() {
+      _selectedPsychiatristID = null;
+    });
   }
 
   @override
@@ -56,6 +59,14 @@ class _AdminPsychiatristScreenState extends State<AdminPsychiatristScreen> {
     if (_hasError) {
       return const Center(child: Text('Error fetching psychiatrists'));
     }
+
+    if (_selectedPsychiatristID != null) {
+      return AdminPsychiatristDetailsScreen(
+        psychiatristID: _selectedPsychiatristID!,
+        onBack: _goBackToList,
+      );
+    }
+
     if (_psychiatrists.isEmpty) {
       return const Center(child: Text('No psychiatrists available'));
     }
@@ -74,10 +85,7 @@ class _AdminPsychiatristScreenState extends State<AdminPsychiatristScreen> {
               ),
               subtitle: Text("Email: ${psych['email'] ?? 'N/A'}"),
               trailing: const Icon(Icons.arrow_forward_ios_rounded),
-              onTap: () {
-                final id = psych['ID'];
-                if (id != null) _openPsychiatristDetails(id);
-              },
+              onTap: () => _openPsychiatristDetails(psych['ID']),
             ),
           );
         },

@@ -23,7 +23,7 @@ class _AppLayoutState extends State<AppLayout> {
   final GlobalKey<SessionScreenState> _sessionScreenKey =
       GlobalKey<SessionScreenState>();
 
-  late final List<Widget> _screens;
+  late List<Widget> _screens;
   int _selectedIndex = 0;
 
   Map<String, dynamic>? _psychiatristDetails;
@@ -75,6 +75,7 @@ class _AppLayoutState extends State<AppLayout> {
           setState(() => _isFabVisible = visible);
         },
       ),
+      const PsychiatristDetailsScreen(), // Rendered as part of layout
     ];
 
     _fetchPsychiatristDetails();
@@ -136,7 +137,8 @@ class _AppLayoutState extends State<AppLayout> {
   }
 
   Widget? _buildFAB() {
-    if (!_isFabVisible) return null; // 👈 hide FAB when not visible
+    if (!_isFabVisible || _selectedIndex == 3)
+      return null; // 👈 hide FAB on profile
 
     final config = _fabConfigs[_selectedIndex];
     if (config == null) return null;
@@ -163,17 +165,7 @@ class _AppLayoutState extends State<AppLayout> {
       userDetails: _psychiatristDetails,
       isLoading: _isLoading,
       hasError: _hasError,
-      onProfileTap: () {
-        if (_psychiatristDetails != null) {
-          final id = _psychiatristDetails!['ID'];
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => PsychiatristDetailsScreen(psychiatristID: id),
-            ),
-          );
-        }
-      },
+      onProfileTap: () => _onNavTap(3), // ✅ go to profile screen
       navigationItems: [
         SidebarNavItem(
           index: 0,
@@ -196,7 +188,7 @@ class _AppLayoutState extends State<AppLayout> {
       ],
     );
 
-    final titles = ['Dashboard', 'Patients', 'Sessions'];
+    final titles = ['Dashboard', 'Patients', 'Sessions', 'Profile'];
 
     return SafeArea(
       child: Scaffold(
@@ -207,7 +199,7 @@ class _AppLayoutState extends State<AppLayout> {
             children: [
               Image.asset(
                 'assets/images/logo.png',
-                height: 50, // adjust height as needed
+                height: 50,
                 fit: BoxFit.contain,
               ),
               Text(
@@ -219,15 +211,8 @@ class _AppLayoutState extends State<AppLayout> {
           actions: [
             PopupMenuButton<String>(
               onSelected: (value) async {
-                if (value == 'profile' && _psychiatristDetails != null) {
-                  final id = _psychiatristDetails!['ID'];
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (_) => PsychiatristDetailsScreen(psychiatristID: id),
-                    ),
-                  );
+                if (value == 'profile') {
+                  _onNavTap(3); // ✅ navigate to profile screen
                 } else if (value == 'logout') {
                   await _handleLogout();
                 }
@@ -266,6 +251,11 @@ class _AppLayoutState extends State<AppLayout> {
                         icon: Icon(Icons.event_outlined),
                         activeIcon: Icon(Icons.event),
                         label: 'Sessions',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.account_circle_outlined),
+                        activeIcon: Icon(Icons.account_circle),
+                        label: 'Profile',
                       ),
                     ],
                   )

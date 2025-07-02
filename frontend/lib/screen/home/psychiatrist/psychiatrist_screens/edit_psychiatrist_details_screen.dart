@@ -4,7 +4,14 @@ import '../../../../widget/widget_exporter.dart';
 import 'psychiatrist_details_screen.dart';
 
 class EditPsychiatristDetailsScreen extends StatefulWidget {
-  const EditPsychiatristDetailsScreen({super.key});
+  final int psychiatristID;
+  final VoidCallback onBack;
+
+  const EditPsychiatristDetailsScreen({
+    super.key,
+    required this.psychiatristID,
+    required this.onBack,
+  });
 
   @override
   State<EditPsychiatristDetailsScreen> createState() =>
@@ -24,6 +31,7 @@ class _EditPsychiatristDetailsScreenState
   bool _isSubmitting = false;
   bool _hasError = false;
   int? _psychiatristId;
+  int? _selectedPsychiatristID;
 
   @override
   void initState() {
@@ -55,6 +63,15 @@ class _EditPsychiatristDetailsScreenState
     });
   }
 
+  Future<void> reload() async {
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+      _selectedPsychiatristID = null;
+    });
+    await _loadPsychiatristDetails();
+  }
+
   Future<void> _submitUpdate() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -74,14 +91,6 @@ class _EditPsychiatristDetailsScreenState
 
     if (res != null && res['error'] == null) {
       ReusableSnackbarWidget.show(context, 'Details updated successfully!');
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder:
-              (_) =>
-                  PsychiatristDetailsScreen(psychiatristID: _psychiatristId!),
-        ),
-      );
     } else {
       ReusableSnackbarWidget.show(
         context,
@@ -90,95 +99,81 @@ class _EditPsychiatristDetailsScreenState
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Edit Profile',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () {
-            if (_psychiatristId != null) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder:
-                      (_) => PsychiatristDetailsScreen(
-                        psychiatristID: _psychiatristId!,
-                      ),
-                ),
-              );
-            }
-          },
-        ),
-      ),
-      body:
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _hasError
-              ? const Center(child: Text('Failed to load psychiatrist details'))
-              : _buildForm(),
-    );
+  void _goBackToList() {
+    setState(() {
+      _selectedPsychiatristID = null;
+    });
   }
 
-  Widget _buildForm() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ReusableTextFieldWidget(
-                  controller: _firstNameController,
-                  label: 'First Name',
-                  validator:
-                      (val) =>
-                          val == null || val.isEmpty
-                              ? 'First name is required'
-                              : null,
-                  autofillHints: const [AutofillHints.givenName],
-                ),
-                const SizedBox(height: 24),
-                ReusableTextFieldWidget(
-                  controller: _lastNameController,
-                  label: 'Last Name',
-                  validator:
-                      (val) =>
-                          val == null || val.isEmpty
-                              ? 'Last name is required'
-                              : null,
-                  autofillHints: const [AutofillHints.familyName],
-                ),
-                const SizedBox(height: 24),
-                ReusableTextFieldWidget(
-                  controller: _emailController,
-                  label: 'Email',
-                  keyboardType: TextInputType.emailAddress,
-                  validator:
-                      (val) =>
-                          val == null || !val.contains('@')
-                              ? 'Enter a valid email'
-                              : null,
-                  autofillHints: const [AutofillHints.email],
-                ),
-                const SizedBox(height: 33),
-                ReusableButtonWidget(
-                  text: 'Save Changes',
-                  isLoading: _isSubmitting,
-                  onPressed: _submitUpdate,
-                ),
-              ],
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_hasError) {
+      return const Center(child: Text('Failed to fetch patients.'));
+    }
+
+    if (_selectedPsychiatristID != null) {
+      return PsychiatristDetailsScreen();
+    }
+
+    if (_psychiatristId == null) {
+      return const Center(child: Text('No psychiatrist details found'));
+    }
+
+    return ListView(
+      children: [
+        Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded),
+              onPressed: widget.onBack,
             ),
-          ),
+            const Text(
+              'Psychiatrist Details',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+          ],
         ),
-      ),
+        const SizedBox(height: 55),
+        ReusableTextFieldWidget(
+          controller: _firstNameController,
+          label: 'First Name',
+          validator:
+              (val) =>
+                  val == null || val.isEmpty ? 'First name is required' : null,
+          autofillHints: const [AutofillHints.givenName],
+        ),
+        const SizedBox(height: 24),
+        ReusableTextFieldWidget(
+          controller: _lastNameController,
+          label: 'Last Name',
+          validator:
+              (val) =>
+                  val == null || val.isEmpty ? 'Last name is required' : null,
+          autofillHints: const [AutofillHints.familyName],
+        ),
+        const SizedBox(height: 24),
+        ReusableTextFieldWidget(
+          controller: _emailController,
+          label: 'Email',
+          keyboardType: TextInputType.emailAddress,
+          validator:
+              (val) =>
+                  val == null || !val.contains('@')
+                      ? 'Enter a valid email'
+                      : null,
+          autofillHints: const [AutofillHints.email],
+        ),
+        const SizedBox(height: 33),
+        ReusableButtonWidget(
+          text: 'Save Changes',
+          isLoading: _isSubmitting,
+          onPressed: _submitUpdate,
+        ),
+      ],
     );
   }
 }

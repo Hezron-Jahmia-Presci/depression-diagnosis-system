@@ -4,7 +4,14 @@ import '../../../widget/widget_exporter.dart';
 import '../../screens_exporter.dart';
 
 class EditAdminDetailsScreen extends StatefulWidget {
-  const EditAdminDetailsScreen({super.key});
+  final int adminID;
+  final VoidCallback onBack;
+
+  const EditAdminDetailsScreen({
+    super.key,
+    required this.adminID,
+    required this.onBack,
+  });
 
   @override
   State<EditAdminDetailsScreen> createState() => _EditAdminDetailsScreenState();
@@ -21,6 +28,7 @@ class _EditAdminDetailsScreenState extends State<EditAdminDetailsScreen> {
   bool _isLoading = true;
   bool _isSubmitting = false;
   bool _hasError = false;
+  int? _selectedAdminID;
 
   @override
   void initState() {
@@ -51,6 +59,15 @@ class _EditAdminDetailsScreenState extends State<EditAdminDetailsScreen> {
     });
   }
 
+  Future<void> reload() async {
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+      _selectedAdminID = null;
+    });
+    await _loadAdminDetails();
+  }
+
   Future<void> _submitUpdate() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -70,10 +87,6 @@ class _EditAdminDetailsScreenState extends State<EditAdminDetailsScreen> {
 
     if (res != null && res['error'] == null) {
       ReusableSnackbarWidget.show(context, 'Details updated successfully!');
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const AdminDetailsScreen()),
-      );
     } else {
       ReusableSnackbarWidget.show(
         context,
@@ -82,88 +95,77 @@ class _EditAdminDetailsScreenState extends State<EditAdminDetailsScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Edit Profile',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const AdminDetailsScreen()),
-            );
-          },
-        ),
-      ),
-      body:
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _hasError
-              ? const Center(child: Text('Failed to load admin details'))
-              : _buildForm(),
-    );
+  void _goBackToList() {
+    setState(() {
+      _selectedAdminID = null;
+    });
   }
 
-  Widget _buildForm() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ReusableTextFieldWidget(
-                  controller: _firstNameController,
-                  label: 'First Name',
-                  validator:
-                      (val) =>
-                          val == null || val.isEmpty
-                              ? 'First name is required'
-                              : null,
-                  autofillHints: const [AutofillHints.givenName],
-                ),
-                const SizedBox(height: 24),
-                ReusableTextFieldWidget(
-                  controller: _lastNameController,
-                  label: 'Last Name',
-                  validator:
-                      (val) =>
-                          val == null || val.isEmpty
-                              ? 'Last name is required'
-                              : null,
-                  autofillHints: const [AutofillHints.familyName],
-                ),
-                const SizedBox(height: 24),
-                ReusableTextFieldWidget(
-                  controller: _emailController,
-                  label: 'Email',
-                  keyboardType: TextInputType.emailAddress,
-                  validator:
-                      (val) =>
-                          val == null || !val.contains('@')
-                              ? 'Enter a valid email'
-                              : null,
-                  autofillHints: const [AutofillHints.email],
-                ),
-                const SizedBox(height: 33),
-                ReusableButtonWidget(
-                  text: 'Save Changes',
-                  isLoading: _isSubmitting,
-                  onPressed: _submitUpdate,
-                ),
-              ],
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_hasError) {
+      return const Center(child: Text('Failed to fetch patients.'));
+    }
+
+    if (_selectedAdminID != null) {
+      return PsychiatristDetailsScreen();
+    }
+
+    return ListView(
+      children: [
+        Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded),
+              onPressed: widget.onBack,
             ),
-          ),
+            const Text(
+              'Admin Details',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+          ],
         ),
-      ),
+        const SizedBox(height: 16),
+        ReusableTextFieldWidget(
+          controller: _firstNameController,
+          label: 'First Name',
+          validator:
+              (val) =>
+                  val == null || val.isEmpty ? 'First name is required' : null,
+          autofillHints: const [AutofillHints.givenName],
+        ),
+        const SizedBox(height: 24),
+        ReusableTextFieldWidget(
+          controller: _lastNameController,
+          label: 'Last Name',
+          validator:
+              (val) =>
+                  val == null || val.isEmpty ? 'Last name is required' : null,
+          autofillHints: const [AutofillHints.familyName],
+        ),
+        const SizedBox(height: 24),
+        ReusableTextFieldWidget(
+          controller: _emailController,
+          label: 'Email',
+          keyboardType: TextInputType.emailAddress,
+          validator:
+              (val) =>
+                  val == null || !val.contains('@')
+                      ? 'Enter a valid email'
+                      : null,
+          autofillHints: const [AutofillHints.email],
+        ),
+        const SizedBox(height: 33),
+        ReusableButtonWidget(
+          text: 'Save Changes',
+          isLoading: _isSubmitting,
+          onPressed: _submitUpdate,
+        ),
+      ],
     );
   }
 }

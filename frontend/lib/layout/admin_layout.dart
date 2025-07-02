@@ -15,13 +15,14 @@ class AdminLayout extends StatefulWidget {
 }
 
 class _AdminLayoutState extends State<AdminLayout> {
-  final _adminService = AdminService();
-  late final List<Widget> _screens;
+  final AdminService _adminService = AdminService();
   int _selectedIndex = 0;
 
   Map<String, dynamic>? _adminDetails;
   bool _isLoading = true;
   bool _hasError = false;
+
+  late final List<Widget> _screens;
 
   @override
   void initState() {
@@ -30,7 +31,7 @@ class _AdminLayoutState extends State<AdminLayout> {
       AdminPatientScreen(),
       AdminPsychiatristScreen(),
       AdminSessionScreen(),
-      AdminDetailsScreen(),
+      const AdminDetailsScreen(),
     ];
     _fetchAdminDetails();
   }
@@ -52,7 +53,9 @@ class _AdminLayoutState extends State<AdminLayout> {
     }
   }
 
-  void _onNavTap(int index) => setState(() => _selectedIndex = index);
+  void _onNavTap(int index) {
+    setState(() => _selectedIndex = index);
+  }
 
   Future<void> _handleLogout() async {
     final loggedOut = await _adminService.logoutAdmin();
@@ -61,9 +64,16 @@ class _AdminLayoutState extends State<AdminLayout> {
     }
   }
 
+  Widget? _buildFAB() {
+    // Reserved for future FAB usage for admin screens
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final isMobile = MediaQuery.of(context).size.width < kDesktopBreakpoint;
+
+    final titles = ['Patients', 'Psychiatrists', 'Sessions', 'Profile'];
 
     final sidebar = AdaptiveSidebar(
       isCompact: isMobile,
@@ -73,12 +83,7 @@ class _AdminLayoutState extends State<AdminLayout> {
       userDetails: _adminDetails,
       isLoading: _isLoading,
       hasError: _hasError,
-      onProfileTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => AdminDetailsScreen()),
-        );
-      },
+      onProfileTap: () => _onNavTap(3), // go to profile screen
       navigationItems: [
         SidebarNavItem(
           index: 0,
@@ -104,28 +109,18 @@ class _AdminLayoutState extends State<AdminLayout> {
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
-          automaticallyImplyLeading: false, // disables back arrow
+          automaticallyImplyLeading: false,
           forceMaterialTransparency: true,
           title: Row(
             children: [
               Image.asset(
                 'assets/images/logo.png',
-                height: 50, // adjust height as needed
+                height: 50,
                 fit: BoxFit.contain,
               ),
-              Builder(
-                builder: (context) {
-                  final titles = [
-                    'Patients',
-                    'Psychiatrists',
-                    'Sessions',
-                    'Profile',
-                  ];
-                  return Text(
-                    titles[_selectedIndex],
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  );
-                },
+              Text(
+                titles[_selectedIndex],
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -133,59 +128,59 @@ class _AdminLayoutState extends State<AdminLayout> {
             PopupMenuButton<String>(
               onSelected: (value) async {
                 if (value == 'profile') {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const AdminDetailsScreen(),
-                    ),
-                  );
+                  _onNavTap(3);
                 } else if (value == 'logout') {
-                  final loggedOut = await _adminService.logoutAdmin();
-                  if (loggedOut && mounted) {
-                    Navigator.pushReplacementNamed(context, '/loginHome');
-                  }
+                  await _handleLogout();
                 }
               },
               itemBuilder:
-                  (context) => [
-                    const PopupMenuItem(
+                  (context) => const [
+                    PopupMenuItem(
                       value: 'profile',
                       child: Text('View Profile'),
                     ),
-                    const PopupMenuItem(value: 'logout', child: Text('Logout')),
+                    PopupMenuItem(value: 'logout', child: Text('Logout')),
                   ],
             ),
           ],
         ),
-
-        body:
-            isMobile
-                ? MobileLayout(
-                  selectedIndex: _selectedIndex,
-                  onNavTap: _onNavTap,
-                  screen: _screens[_selectedIndex],
-                  navigationItems: const [
-                    BottomNavigationBarItem(
-                      icon: Icon(Icons.person_outline),
-                      activeIcon: Icon(Icons.person),
-                      label: 'Patients',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: Icon(Icons.medical_services_outlined),
-                      activeIcon: Icon(Icons.medical_services),
-                      label: 'Psychiatrists',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: Icon(Icons.event_outlined),
-                      activeIcon: Icon(Icons.event),
-                      label: 'Sessions',
-                    ),
-                  ],
-                )
-                : DesktopLayout(
-                  primaryScreen: _screens[_selectedIndex],
-                  sidebar: sidebar,
-                ),
+        body: Padding(
+          padding: const EdgeInsets.only(top: 13.0),
+          child:
+              isMobile
+                  ? MobileLayout(
+                    selectedIndex: _selectedIndex,
+                    onNavTap: _onNavTap,
+                    screen: _screens[_selectedIndex],
+                    navigationItems: const [
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.person_outline),
+                        activeIcon: Icon(Icons.person),
+                        label: 'Patients',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.medical_services_outlined),
+                        activeIcon: Icon(Icons.medical_services),
+                        label: 'Psychiatrists',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.event_outlined),
+                        activeIcon: Icon(Icons.event),
+                        label: 'Sessions',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.account_circle_outlined),
+                        activeIcon: Icon(Icons.account_circle),
+                        label: 'Profile',
+                      ),
+                    ],
+                  )
+                  : DesktopLayout(
+                    primaryScreen: _screens[_selectedIndex],
+                    sidebar: sidebar,
+                  ),
+        ),
+        floatingActionButton: _buildFAB(),
       ),
     );
   }

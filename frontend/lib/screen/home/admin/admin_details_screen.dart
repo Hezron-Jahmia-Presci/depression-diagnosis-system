@@ -15,6 +15,7 @@ class _AdminDetailsScreenState extends State<AdminDetailsScreen> {
   Map<String, dynamic>? _adminDetails;
   bool _isLoading = true;
   bool _hasError = false;
+  int? _selectedAdminID;
 
   @override
   void initState() {
@@ -38,72 +39,59 @@ class _AdminDetailsScreenState extends State<AdminDetailsScreen> {
     }
   }
 
-  void _goToEditScreen() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const EditAdminDetailsScreen()),
-    );
+  Future<void> reload() async {
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+      _selectedAdminID = null;
+    });
+    await _loadAdminDetails();
+  }
+
+  void _goToEditScreen(int psychiatristID) {
+    setState(() => _selectedAdminID = psychiatristID);
+  }
+
+  void _goBackToList() {
+    setState(() => _selectedAdminID = null);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Profile',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        leading:
-            Navigator.canPop(context)
-                ? IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded),
-                  onPressed: () => Navigator.pop(context),
-                )
-                : null,
-      ),
-      body:
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _hasError || _adminDetails == null
-              ? const Center(child: Text('Error loading admin details'))
-              : _buildProfileView(),
-    );
-  }
+    if (_isLoading) return const Center(child: CircularProgressIndicator());
 
-  Widget _buildProfileView() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              ReusableCardWidget(
-                child: Text(
-                  'First Name: ${_adminDetails!['first_name'] ?? 'N/A'}',
-                ),
-              ),
-              const SizedBox(height: 12),
-              ReusableCardWidget(
-                child: Text(
-                  'Last Name: ${_adminDetails!['last_name'] ?? 'N/A'}',
-                ),
-              ),
-              const SizedBox(height: 12),
-              ReusableCardWidget(
-                child: Text('Email: ${_adminDetails!['email'] ?? 'N/A'}'),
-              ),
-              const SizedBox(height: 24),
-              ReusableButtonWidget(
-                text: 'Edit Details',
-                isLoading: false,
-                onPressed: _goToEditScreen,
-              ),
-            ],
-          ),
+    if (_hasError || _adminDetails == null) {
+      return const Center(child: Text('Error fetching admin details'));
+    }
+
+    if (_selectedAdminID != null) {
+      return EditAdminDetailsScreen(
+        adminID: _selectedAdminID!,
+        onBack: _goBackToList,
+      );
+    }
+
+    final admin = _adminDetails!;
+
+    return ListView(
+      children: [
+        const SizedBox(height: 16),
+        ReusableCardWidget(
+          child: Text('First Name: ${admin['first_name'] ?? 'N/A'}'),
         ),
-      ),
+        const SizedBox(height: 12),
+        ReusableCardWidget(
+          child: Text('Last Name: ${admin['last_name'] ?? 'N/A'}'),
+        ),
+        const SizedBox(height: 12),
+        ReusableCardWidget(child: Text('Email: ${admin['email'] ?? 'N/A'}')),
+        const SizedBox(height: 24),
+        ReusableButtonWidget(
+          text: 'Edit Details',
+          isLoading: false,
+          onPressed: () => _goToEditScreen(admin['ID']),
+        ),
+      ],
     );
   }
 }
