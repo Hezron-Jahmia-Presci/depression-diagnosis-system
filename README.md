@@ -25,8 +25,6 @@ The system helps streamline mental health diagnosis by providing:
 .
 ├── backend/                  # Golang Gin API
 ├── frontend/                 # Flutter app
-├── docker/                   # Docker configurations
-├── Makefile                  # Automation commands
 └── README.md                 # Project overview
 ```
 
