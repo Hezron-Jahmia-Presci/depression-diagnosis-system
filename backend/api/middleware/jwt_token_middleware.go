@@ -8,6 +8,9 @@ import (
 	"sync"
 	"time"
 
+	"depression-diagnosis-system/database"
+	"depression-diagnosis-system/database/model"
+
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 )
@@ -17,15 +20,15 @@ var tokenBlacklist = make(map[string]bool)
 var mu sync.Mutex
 
 type Claims struct {
-	ID 		uint   `json:"userID"`
-	Email	string `json:"email"`
+	ID    uint   `json:"userID"`
+	Email string `json:"email"`
 	jwt.StandardClaims
 }
 
 func GenerateToken(id uint, email string) (string, error) {
-	expirationTime := time.Now().Add(24 *time.Hour)
+	expirationTime := time.Now().Add(24 * time.Hour)
 	claims := &Claims{
-		ID: id,
+		ID:    id,
 		Email: email,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
@@ -36,48 +39,57 @@ func GenerateToken(id uint, email string) (string, error) {
 }
 
 func AuthMiddleware() gin.HandlerFunc {
-	return func (c *gin.Context) {
+	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"status":  http.StatusUnauthorized,
-				"message": "error : Authorization header required.",
+				"message": "Authorization header required.",
 			})
-			
 			c.Abort()
 			return
 		}
+
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 		if IsTokenBlacklisted(tokenString) {
-			c.JSON(
-				http.StatusUnauthorized,
-				gin.H{
-					"status":  http.StatusUnauthorized,
-					"message": "error : Token is blacklisted.",
-				},
-			)
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"status":  http.StatusUnauthorized,
+				"message": "Token is blacklisted.",
+			})
 			c.Abort()
 			return
 		}
 
 		claims := &Claims{}
-		token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (any, error) {
+		token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
 			return jwtSecret, nil
 		})
 
 		if err != nil || !token.Valid {
-			
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"status":  http.StatusUnauthorized,
-				"message": "error : Invalid token.",
+				"message": "Invalid or expired token.",
 			})
-			
 			c.Abort()
 			return
 		}
-		
-		c.Set("username", claims.Email)
-		c.Set("userID", claims.ID)
+
+		// Lookup the user (HealthWorker) and preload PersonnelType
+		var user model.HealthWorker
+		if err := database.DB.Preload("PersonnelType").First(&user, claims.ID).Error; err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"status":  http.StatusUnauthorized,
+				"message": "User not found.",
+			})
+			c.Abort()
+			return
+		}
+
+		// Set authenticated user info into Gin context
+		c.Set("userID", user.ID)
+		c.Set("username", user.Email)
+		c.Set("userPersonnelType", user.PersonnelType.Name) // e.g. "admin", "psychiatrist", etc.
+
 		c.Next()
 	}
 }

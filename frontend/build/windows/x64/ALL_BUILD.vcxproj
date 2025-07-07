@@ -140,6 +140,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </ProjectReference>
+    <ProjectReference Include="C:\Users\Hezron Jahmia\Documents\Software Development\depression-diagnosis-system\frontend\build\windows\x64\plugins\file_selector_windows\file_selector_windows_plugin.vcxproj">
+      <Project>{819058B3-26B5-3F82-8A6B-3811A02548A0}</Project>
+      <Name>file_selector_windows_plugin</Name>
+    </ProjectReference>
     <ProjectReference Include="C:\Users\Hezron Jahmia\Documents\Software Development\depression-diagnosis-system\frontend\build\windows\x64\plugins\flutter_secure_storage_windows\flutter_secure_storage_windows_plugin.vcxproj">
       <Project>{59FD3BD9-27B6-3437-BE64-EF9BBC9BD913}</Project>
       <Name>flutter_secure_storage_windows_plugin</Name>

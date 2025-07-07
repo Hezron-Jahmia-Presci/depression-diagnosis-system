@@ -3,6 +3,8 @@ package interfaces
 import "depression-diagnosis-system/database/model"
 
 type SessionSummaryInterface interface {
-	CreateSessionSummary(summary *model.SessionSummary) (*model.SessionSummary, error)
-	GetSessionSummaryBySessionID(sessionID uint) (*model.SessionSummary, error)
+	CreateSummary(s *model.SessionSummary) (*model.SessionSummary, error)
+	GetSummaryBySessionID(sessionID uint) (*model.SessionSummary, error)
+	UpdateSummary(id uint, updated *model.SessionSummary) (*model.SessionSummary, error)
+	DeleteSummary(id uint) error
 }

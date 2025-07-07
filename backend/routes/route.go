@@ -8,36 +8,41 @@ import (
 )
 
 func Routes(router *gin.Engine) {
-	adminHandler := handler.NewAdminHandler()
+	// Initialize handlers
 	patientHandler := handler.NewPatientHandler()
-	psychHandler := handler.NewPsychiatristHandler()
-	phq9Handler := handler.NewPhq9Handler()
+	healthWorkerHandler := handler.NewHealthWorkerHandler()
+	personnelTypeHandler := handler.NewPersonnelTypeHandler()
+	phq9QuestionHandler := handler.NewPhq9QuestionHandler()
+	phq9ResponseHandler := handler.NewPhq9ResponseHandler()
 	diagnosisHandler := handler.NewDiagnosisHandler()
 	sessionHandler := handler.NewSessionHandler()
 	summaryHandler := handler.NewSessionSummaryHandler()
 
-	// ------------------- Admin Routes -------------------
-	adminRoutes := router.Group("/api/v1/admin")
+	// ------------------- Health Worker Routes -------------------
+	healthRoutes := router.Group("/api/v1/health-workers")
+	healthRoutes.POST("/login", healthWorkerHandler.Login)
+	healthRoutes.Use(middleware.AuthMiddleware())
 	{
-		adminRoutes.POST("/login", adminHandler.LogInAdmin)
-		adminRoutes.POST("/create", adminHandler.CreateAdmin)
-		adminRoutes.POST("/logout", middleware.AuthMiddleware(), adminHandler.LogOutAdmin)
-		adminRoutes.GET("/me", middleware.AuthMiddleware(), adminHandler.GetAdminByID)
-		adminRoutes.PUT("/update", middleware.AuthMiddleware(), adminHandler.UpdateAdmin)
-		adminRoutes.DELETE("/delete", middleware.AuthMiddleware(), adminHandler.DeleteAdmin)
+		healthRoutes.POST("/create", healthWorkerHandler.CreateHealthWorker)
+		healthRoutes.GET("/all", healthWorkerHandler.GetAllHealthWorkers)
+		healthRoutes.GET("/me", healthWorkerHandler.GetHealthWorkerByID)
+		healthRoutes.PUT("/:id", healthWorkerHandler.UpdateHealthWorker)
+		healthRoutes.DELETE("/:id", healthWorkerHandler.DeleteHealthWorker)
+		healthRoutes.PUT("/:id/active", healthWorkerHandler.SetActiveStatus)
+		healthRoutes.POST("/logout", middleware.AuthMiddleware(), healthWorkerHandler.Logout)
+		healthRoutes.GET("/search", healthWorkerHandler.SearchHealthWorkers)
+
 	}
 
-	// ------------------- Psychiatrist Routes -------------------
-	psychRoutes := router.Group("/api/v1/psychiatrists")
+	// ------------------- Personnel Type Routes -------------------
+	ptRoutes := router.Group("/api/v1/personnel-types")
+	ptRoutes.Use(middleware.AuthMiddleware())
 	{
-		psychRoutes.POST("/login", psychHandler.LogInPsychiatrist)
-		psychRoutes.POST("/logout", middleware.AuthMiddleware(), psychHandler.LogOutPsychiatrist)
-
-		psychRoutes.POST("/create", psychHandler.CreatePsychiatrist)
-		psychRoutes.GET("/all", middleware.AuthMiddleware(), psychHandler.GetAllPsychiatrists)
-		psychRoutes.GET("/me", middleware.AuthMiddleware(), psychHandler.GetPsychiatristByID)
-		psychRoutes.PUT("/update", middleware.AuthMiddleware(), psychHandler.UpdatePsychiatrist)
-		psychRoutes.DELETE("/delete", middleware.AuthMiddleware(), psychHandler.DeletePsychiatrist)
+		ptRoutes.POST("/create", personnelTypeHandler.CreatePersonnelType)
+		ptRoutes.GET("/all", personnelTypeHandler.GetAllPersonnelTypes)
+		ptRoutes.GET("/:id", personnelTypeHandler.GetPersonnelTypeByID)
+		ptRoutes.DELETE("/:id", personnelTypeHandler.DeletePersonnelType)
+		ptRoutes.GET("/searcch", personnelTypeHandler.SearchPersonnelType)
 	}
 
 	// ------------------- Patient Routes -------------------
@@ -46,26 +51,35 @@ func Routes(router *gin.Engine) {
 	{
 		patientRoutes.POST("/create", patientHandler.CreatePatient)
 		patientRoutes.GET("/all", patientHandler.GetAllPatients)
-		patientRoutes.GET("/mine", patientHandler.GetPatientsByPsychiatrist)
 		patientRoutes.GET("/:id", patientHandler.GetPatientByID)
-		patientRoutes.GET("/:id/by-psych", patientHandler.GetPatientByPsychiatrist)
-		patientRoutes.PUT("/update", patientHandler.UpdatePatient)
+		patientRoutes.PUT("/:id", patientHandler.UpdatePatient)
 		patientRoutes.DELETE("/:id", patientHandler.DeletePatient)
+
+		patientRoutes.GET("/by-healthworker/:id", patientHandler.GetPatientsByHealthWorker)                  // GET /patients/by-healthworker/:id
+		patientRoutes.GET("/by-healthworker-specific/me", patientHandler.GetPatientByHealthWorker)
+		patientRoutes.GET("/by-department/:id", patientHandler.GetPatientsByDepartment)                      // GET /patients/by-department/:id
+		patientRoutes.PUT("/:id/active", patientHandler.SetActiveStatus)
+    	patientRoutes.GET("/search", patientHandler.SearchPatients)   
 	}
 
-	// ------------------- PHQ-9 Routes -------------------
-	phqRoutes := router.Group("/api/v1/phq9")
-	phqRoutes.Use(middleware.AuthMiddleware())
+	// ------------------- PHQ-9 Question Routes -------------------
+	qRoutes := router.Group("/api/v1/phq9/questions")
+	qRoutes.Use(middleware.AuthMiddleware())
 	{
-		// Questions
-		phqRoutes.POST("/questions", phq9Handler.CreateQuestion)
-		phqRoutes.GET("/questions", phq9Handler.GetAllQuestions)
-		phqRoutes.GET("/questions/:questionID", phq9Handler.GetQuestionByID)
+		qRoutes.POST("/create", phq9QuestionHandler.CreateQuestion)
+		qRoutes.GET("/all", phq9QuestionHandler.GetAllQuestions)
+		qRoutes.GET("/:id", phq9QuestionHandler.GetQuestionByID)
+		qRoutes.DELETE("/:id", phq9QuestionHandler.DeleteQuestion)
+	}
 
-		// Responses
-		phqRoutes.POST("/responses/:id", phq9Handler.RecordResponses)
-		phqRoutes.GET("/responses/:id", phq9Handler.GetResponses)
-		phqRoutes.GET("/summary/:id", phq9Handler.GetResponseSummary)
+	// ------------------- PHQ-9 Response Routes -------------------
+	rRoutes := router.Group("/api/v1/phq9/responses")
+	rRoutes.Use(middleware.AuthMiddleware())
+	{
+		rRoutes.POST("/create", phq9ResponseHandler.CreateResponse)
+		rRoutes.GET("/:id", phq9ResponseHandler.GetResponseBySessionID)
+		rRoutes.PUT("/:id", phq9ResponseHandler.UpdateResponse)
+		rRoutes.DELETE("/:id", phq9ResponseHandler.DeleteResponse)
 	}
 
 	// ------------------- Diagnosis Routes -------------------
@@ -81,17 +95,51 @@ func Routes(router *gin.Engine) {
 	sessionRoutes.Use(middleware.AuthMiddleware())
 	{
 		sessionRoutes.POST("/create", sessionHandler.CreateSession)
-		sessionRoutes.PUT("/status", sessionHandler.UpdateSessionStatus)
 		sessionRoutes.GET("/all", sessionHandler.GetAllSessions)
-		sessionRoutes.GET("/mine", sessionHandler.GetSessionsByPsychiatrist)
 		sessionRoutes.GET("/:id", sessionHandler.GetSessionByID)
+		sessionRoutes.GET("/healthworker/me", sessionHandler.GetSessionsByHealthWorker)
+		sessionRoutes.PUT("/:id", sessionHandler.UpdateSession)
+		sessionRoutes.DELETE("/:id", sessionHandler.DeleteSession)
+		sessionRoutes.GET("/code/:code", sessionHandler.GetSessionByCode)
+		sessionRoutes.PUT("/status", sessionHandler.UpdateSessionStatus)
+		sessionRoutes.GET("/patient/:id", sessionHandler.GetSessionsByPatient)
+		sessionRoutes.GET("/Search", sessionHandler.SearchSessions)
+	
 	}
 
 	// ------------------- Session Summary Routes -------------------
-	summaryRoutes := router.Group("/api/v1/session-summary")
+	summaryRoutes := router.Group("/api/v1/session-summaries")
 	summaryRoutes.Use(middleware.AuthMiddleware())
 	{
-		summaryRoutes.POST("/:id", summaryHandler.CreateSessionSummary)
-		summaryRoutes.GET("/:id", summaryHandler.GetSessionSummary)
+		summaryRoutes.POST("/create", summaryHandler.CreateSummary)
+		summaryRoutes.GET("/:id", summaryHandler.GetSummaryBySessionID)
+		summaryRoutes.PUT("/:id", summaryHandler.UpdateSummary)
+		summaryRoutes.DELETE("/:id", summaryHandler.DeleteSummary)
+	}
+
+	// ------------------- Department Routes -------------------
+	departmentHandler := handler.NewDepartmentHandler()
+	deptRoutes := router.Group("/api/v1/departments")
+	deptRoutes.Use(middleware.AuthMiddleware())
+	{
+		deptRoutes.POST("/create", departmentHandler.CreateDepartment)
+		deptRoutes.GET("/all", departmentHandler.GetAllDepartments)
+		deptRoutes.GET("/:id", departmentHandler.GetDepartmentByID)
+		deptRoutes.PUT("/:id", departmentHandler.UpdateDepartment)
+		deptRoutes.DELETE("/:id", departmentHandler.DeleteDepartment)
+		deptRoutes.GET("/search", departmentHandler.SearchDepartments)
+	}
+
+	// ------------------- Medication History Routes -------------------
+	medicationHistoryHandler := handler.NewMedicationHistoryHandler()
+	medicationHistoryRoutes := router.Group("/api/v1/medication-history")
+	medicationHistoryRoutes.Use(middleware.AuthMiddleware())
+	{
+		medicationHistoryRoutes.POST("/create", medicationHistoryHandler.CreateMedicationHistory)
+		medicationHistoryRoutes.GET("/all", medicationHistoryHandler.GetAllMedicationHistories)
+		medicationHistoryRoutes.GET("/:id", medicationHistoryHandler.GetMedicationHistoryByID)
+		medicationHistoryRoutes.PUT("/:id", medicationHistoryHandler.UpdateMedicationHistory)
+		medicationHistoryRoutes.DELETE("/:id", medicationHistoryHandler.DeleteMedicationHistory)
+		medicationHistoryRoutes.GET("/search", medicationHistoryHandler.SearchMedicationHistories)
 	}
 }

@@ -1,7 +1,2 @@
-2025/07/01-10:43:09.087 fe0 Reusing MANIFEST C:\Users\HEZRON~1\AppData\Local\Temp\flutter_tools.8e6ed209\flutter_tools_chrome_device.670c874d\Default\shared_proto_db/MANIFEST-000001
-2025/07/01-10:43:09.088 fe0 Recovering log #13
-2025/07/01-10:43:09.090 fe0 Reusing old log C:\Users\HEZRON~1\AppData\Local\Temp\flutter_tools.8e6ed209\flutter_tools_chrome_device.670c874d\Default\shared_proto_db/000013.log 
-2025/07/01-10:43:09.092 fe0 Delete type=0 #3
-2025/07/01-10:43:09.092 fe0 Delete type=0 #4
-2025/07/01-10:43:09.092 fe0 Delete type=0 #7
-2025/07/01-10:43:09.092 fe0 Delete type=0 #10
+2025/07/07-16:15:04.010 4390 Creating DB C:\Users\HEZRON~1\AppData\Local\Temp\flutter_tools.262ca025\flutter_tools_chrome_device.8de46f3b\Default\shared_proto_db since it was missing.
+2025/07/07-16:15:04.035 4390 Reusing MANIFEST C:\Users\HEZRON~1\AppData\Local\Temp\flutter_tools.262ca025\flutter_tools_chrome_device.8de46f3b\Default\shared_proto_db/MANIFEST-000001

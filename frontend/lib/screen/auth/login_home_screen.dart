@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:depression_diagnosis_system/constants/color_constants.dart';
 import '../../widget/widget_exporter.dart';
-import 'admin_login_screen.dart';
-import 'psych_login_screen.dart';
+import 'unified_login_screen.dart';
 
 class LoginHomeScreen extends StatelessWidget {
   const LoginHomeScreen({super.key});
@@ -15,7 +14,7 @@ class LoginHomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final screenWidth = MediaQuery.sizeOf(context).width;
-    final cardWidth = screenWidth * 0.3;
+    final cardWidth = screenWidth * 0.35;
 
     return Scaffold(
       appBar: AppBar(
@@ -32,22 +31,30 @@ class LoginHomeScreen extends StatelessWidget {
                 width: cardWidth,
                 child: Column(
                   children: [
-                    Image.asset(
-                      'assets/images/logo.png',
-                      height: 380, // adjust height as needed
-                      fit: BoxFit.contain,
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainer,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Image.asset(
+                        'assets/images/logo.png',
+                        height: 200, // adjust height as needed
+                        fit: BoxFit.contain,
+                      ),
                     ),
+
                     Text(
                       'DDS',
                       style: TextStyle(
-                        fontSize: 132,
+                        fontSize: 128,
                         fontWeight: FontWeight.bold,
                         color: colorScheme.primary,
                       ),
                       textAlign: TextAlign.center,
                     ),
                     Text(
-                      "Choose your role to get started with the system",
+                      "Log in to get started with the system",
                       style: TextStyle(
                         fontSize: 44,
                         fontWeight: FontWeight.w300,
@@ -57,27 +64,17 @@ class LoginHomeScreen extends StatelessWidget {
                   ],
                 ),
               ),
+
               const SizedBox(height: 83),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _LoginOption(
-                    icon: Icons.admin_panel_settings,
-                    label: 'Administrator',
-                    onTap: () => _navigateTo(context, const AdminLoginScreen()),
-                    color: colorScheme.primary,
-                    width: cardWidth,
-                  ),
-                  const SizedBox(width: 55),
-                  _LoginOption(
-                    icon: Icons.psychology,
-                    label: 'Psychiatrist',
-                    onTap: () => _navigateTo(context, const PsychLoginScreen()),
-                    color: colorScheme.primary,
-                    width: cardWidth,
-                  ),
-                ],
+
+              _LoginOption(
+                icon: Icons.admin_panel_settings,
+                label: 'Login',
+                onTap: () => _navigateTo(context, const UnifiedLoginScreen()),
+                color: colorScheme.primary,
+                width: cardWidth,
               ),
+
               const SizedBox(height: 122), // spacing before footer
             ],
           ),
@@ -102,7 +99,7 @@ class _FooterText extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(13.0),
       child: Text(
-        '© 2025 Hezron Jahmia Presci. All rights reserved.',
+        '© 2025 Butabika National Mental Referral Hospital. All rights reserved.',
         textAlign: TextAlign.center,
         style: TextStyle(
           color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.6),
@@ -138,7 +135,7 @@ class _LoginOption extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              GradientIcon(
+              ReusableGradientIcon(
                 icon: icon,
                 size: 148,
                 colors: AppGradients.vibrant,

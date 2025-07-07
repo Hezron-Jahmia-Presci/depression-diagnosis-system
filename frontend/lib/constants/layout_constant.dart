@@ -1,2 +1,2 @@
-const double kDesktopBreakpoint = 1128;
+const double kDesktopBreakpoint = 1366;
 const double kSectionSpacing = 21.0;

@@ -1,9 +1,7 @@
+import 'package:depression_diagnosis_system/constants/url_constant.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 abstract class BaseService {
-  // TODO: Replace with your actual deployed URL in production
-  final String baseUrl = "http://localhost:8080/api/v1/";
-
   final FlutterSecureStorage storage = const FlutterSecureStorage();
 
   Future<String?> getAuthToken() async {

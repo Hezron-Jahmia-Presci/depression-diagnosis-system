@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-class GradientIcon extends StatelessWidget {
+class ReusableGradientIcon extends StatelessWidget {
   final IconData icon;
   final double size;
   final List<Color> colors;
   final VoidCallback onPressed;
 
-  const GradientIcon({
+  const ReusableGradientIcon({
     super.key,
     required this.icon,
     required this.size,

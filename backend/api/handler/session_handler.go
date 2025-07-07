@@ -1,12 +1,12 @@
 package handler
 
 import (
+	"net/http"
+
 	"depression-diagnosis-system/api/controller"
 	"depression-diagnosis-system/api/interfaces"
+	"depression-diagnosis-system/api/util"
 	"depression-diagnosis-system/database/model"
-	"net/http"
-	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,113 +21,168 @@ func NewSessionHandler() *SessionHandler {
 	}
 }
 
+// Only admins, psychologists, psychiatrists, clinical officers can create sessions
 func (sh *SessionHandler) CreateSession(c *gin.Context) {
-	var req struct {
-		Date      string `json:"date" binding:"required"`
-		PatientID uint   `json:"patientID" binding:"required"`
-	}
-	
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status":  http.StatusBadRequest,
-			"message": "Invalid input: " + err.Error(),
-		})
-		return
-	}
-
-	date, err := time.Parse(time.RFC3339, req.Date)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status":  http.StatusBadRequest,
-			"message": "Invalid date format",
-		})
-		return
-	}
-
-	psychID, exists := c.Get("userID")
+	ptypeI, exists := c.Get("userPersonnelType")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"status":  http.StatusUnauthorized,
-			"message": "Unauthorized access",
-		})
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
 		return
 	}
 
-	session := &model.Session{
-		PsychiatristID: psychID.(uint),
-		PatientID:      req.PatientID,
-		Date:           date,
+	ptype, ok := ptypeI.(string)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to parse personnel type"})
+		return
 	}
-	
 
-	created, err := sh.SessionController.CreateSession(session)
+	allowedTypes := map[string]bool{
+		"Admin":            true,
+		"Psychiatrist":     true,
+		"Psychologist":     true,
+		"Clinical Officer": true,
+	}
+
+	if !allowedTypes[ptype] {
+		c.JSON(http.StatusForbidden, gin.H{"message": "Insufficient permissions to create session"})
+		return
+	}
+
+	var input model.Session
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid input: " + err.Error()})
+		return
+	}
+
+	createdSession, err := sh.SessionController.CreateSession(&input)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"status":  http.StatusInternalServerError,
-			"message": "Failed to create session: " + err.Error(),
-		})
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to create session: " + err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"status":  http.StatusCreated,
 		"message": "Session created successfully",
-		"session": gin.H{
-			"id":             created.ID,
-			"psychiatristId": created.PsychiatristID,
-			"patientId":      created.PatientID,
-			"date":           created.Date,
-			"status":         created.Status,
-		},
+		"session": createdSession,
 	})
 }
 
-func (sh *SessionHandler) CreateFollowUpSession(c *gin.Context) {
-	var req struct {
-		OriginalSessionID uint   `json:"originalSessionID" binding:"required"`
-		Date              string `json:"date" binding:"required"`
+
+func (sh *SessionHandler) GetSessionByID(c *gin.Context) {
+	id, err := util.GetIDParam(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid ID"})
+		return
 	}
 
-	if err := c.ShouldBindJSON(&req); err != nil {
+	session, err := sh.SessionController.GetSessionByID(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "Session not found: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"session": session})
+}
+
+func (sh *SessionHandler) GetAllSessions(c *gin.Context) {
+	sessions, err := sh.SessionController.GetAllSessions()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to retrieve sessions: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"sessions": sessions})
+}
+
+func (sh *SessionHandler) GetSessionByCode(c *gin.Context) {
+	code := c.Param("code")
+	if code == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Session code is required"})
+		return
+	}
+
+	session, err := sh.SessionController.GetSessionByCode(code)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "Session not found: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"session": session})
+}
+
+func (sh *SessionHandler) GetSessionsByPatient(c *gin.Context) {
+	patientID, err := util.GetIDParam(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid patient ID"})
+		return
+	}
+
+	sessions, err := sh.SessionController.GetSessionsByPatient(patientID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to fetch sessions: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"sessions": sessions})
+}
+
+func (sh *SessionHandler) GetSessionsByHealthWorker(c *gin.Context) {
+	healthworkerID, exists := c.Get("userID")
+	if !exists {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status":  http.StatusBadRequest,
-			"message": "Invalid input: " + err.Error(),
+			"message": "Admin ID not provided",
 		})
 		return
 	}
 
-	date, err := time.Parse(time.RFC3339, req.Date)
+	sessions, err := sh.SessionController.GetSessionsByHealthWorker(healthworkerID.(uint))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status":  http.StatusBadRequest,
-			"message": "Invalid date format",
-		})
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to fetch sessions: " + err.Error()})
 		return
 	}
 
-	followUp, err := sh.SessionController.CreateFollowUpSession(req.OriginalSessionID, date)
+	c.JSON(http.StatusOK, gin.H{"sessions": sessions})
+}
+
+
+func (sh *SessionHandler) UpdateSession(c *gin.Context) {
+	id, err := util.GetIDParam(c)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"status":  http.StatusInternalServerError,
-			"message": "Failed to create follow-up session: " + err.Error(),
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid ID"})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
-		"status":  http.StatusCreated,
-		"message": "Follow-up session created successfully",
-		"session": gin.H{
-			"id":             followUp.ID,
-			"psychiatristId": followUp.PsychiatristID,
-			"patientId":      followUp.PatientID,
-			"date":           followUp.Date,
-			"status":         followUp.Status,
-		},
+	var updated model.Session
+	if err := c.ShouldBindJSON(&updated); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid input: " + err.Error()})
+		return
+	}
+
+	session, err := sh.SessionController.UpdateSession(id, &updated)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to update session: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Session updated successfully",
+		"session": session,
 	})
 }
 
+func (sh *SessionHandler) DeleteSession(c *gin.Context) {
+	id, err := util.GetIDParam(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid ID"})
+		return
+	}
+
+	if err := sh.SessionController.DeleteSession(id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to delete session: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Session deleted successfully"})
+}
 func (sh *SessionHandler) UpdateSessionStatus(c *gin.Context) {
 	var req struct {
 		SessionID uint   `json:"sessionID" binding:"required"`
@@ -157,68 +212,19 @@ func (sh *SessionHandler) UpdateSessionStatus(c *gin.Context) {
 	})
 }
 
-func (sh *SessionHandler) GetAllSessions(c *gin.Context) {
-	sessions, err := sh.SessionController.GetAllSessions()
+func (sh *SessionHandler) SearchSessions(c *gin.Context) {
+	// Extract query params
+	queryParams := map[string]string{
+        "session_code":     c.Query("session_code"),
+        "health_worker_id": c.Query("health_worker_id"),
+        "patient_id":   	c.Query("patient_id"),
+    }
+
+	sessions, err := sh.SessionController.SearchSessions(queryParams)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"status":  http.StatusInternalServerError,
-			"message": "Failed to retrieve sessions: " + err.Error(),
-		})
-		return
-	}
+        c.JSON(http.StatusInternalServerError, gin.H{"message": "Search failed: " + err.Error()})
+        return
+    }
 
-	c.JSON(http.StatusOK, gin.H{
-		"status":   http.StatusOK,
-		"sessions": sessions,
-	})
-}
-
-func (sh *SessionHandler) GetSessionsByPsychiatrist(c *gin.Context) {
-	psychID, exists := c.Get("userID")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"status":  http.StatusUnauthorized,
-			"message": "Unauthorized access",
-		})
-		return
-	}
-
-	sessions, err := sh.SessionController.GetSessionsByPsychiatrist(psychID.(uint))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"status":  http.StatusInternalServerError,
-			"message": "Failed to retrieve sessions: " + err.Error(),
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"status":   http.StatusOK,
-		"sessions": sessions,
-	})
-}
-
-func (sh *SessionHandler) GetSessionByID(c *gin.Context) {
-	sessionID, err := strconv.ParseUint(c.Param("id"), 10, 32)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status":  http.StatusBadRequest,
-			"message": "Invalid session ID",
-		})
-		return
-	}
-
-	session, err := sh.SessionController.GetSessionByID(uint(sessionID))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"status":  http.StatusInternalServerError,
-			"message": "Failed to retrieve session: " + err.Error(),
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"status":  http.StatusOK,
-		"session": session,
-	})
+    c.JSON(http.StatusOK, gin.H{"sessions": sessions})
 }

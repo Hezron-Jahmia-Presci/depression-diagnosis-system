@@ -28,7 +28,7 @@ func main() {
 	// Connect to the database and run migrations
 	database.Conn()
 	database.DBMigrate()
-	database.SeedPHQ9Questions()
+	database.RunAllSeeders()
 
 	// Set Gin mode based on environment
 	mode := os.Getenv("GIN_MODE")

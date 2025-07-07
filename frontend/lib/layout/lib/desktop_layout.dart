@@ -5,11 +5,13 @@ import 'package:flutter/material.dart';
 class DesktopLayout extends StatelessWidget {
   final Widget primaryScreen;
   final Widget sidebar;
+  final Widget? floatingActionButton;
 
   const DesktopLayout({
     super.key,
     required this.primaryScreen,
     required this.sidebar,
+    this.floatingActionButton,
   });
 
   @override
@@ -28,6 +30,7 @@ class DesktopLayout extends StatelessWidget {
           ),
         ],
       ),
+      floatingActionButton: this.floatingActionButton,
     );
   }
 }

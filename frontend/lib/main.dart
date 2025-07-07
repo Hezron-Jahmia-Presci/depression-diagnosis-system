@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:depression_diagnosis_system/layout/app_layout.dart';
 import 'dart:async';
 
 import 'screen/auth/login_home_screen.dart' show LoginHomeScreen;
-import 'screen/auth/psych_register_screen.dart' show PsychRegisterScreen;
 
 void main() {
   runApp(const MyApp());
@@ -12,7 +10,7 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  static const Color _seedColor = Colors.teal;
+  static const Color _seedColor = Colors.greenAccent;
   static const bool _isDarkMode = false;
 
   static ColorScheme lightColorScheme = ColorScheme.fromSeed(
@@ -30,11 +28,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
-      routes: {
-        '/loginHome': (context) => LoginHomeScreen(),
-        '/register': (context) => PsychRegisterScreen(),
-        '/psychDashboard': (context) => AppLayout(title: 'Dashboard'),
-      },
+      routes: {'/loginHome': (context) => LoginHomeScreen()},
       debugShowCheckedModeBanner: false,
 
       theme: ThemeData(useMaterial3: true, colorScheme: MyApp.lightColorScheme),

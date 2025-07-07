@@ -21,6 +21,7 @@ class ReusableTextFieldWidget extends StatelessWidget {
     this.readOnly = false,
     this.expands = false,
     required List<String> autofillHints,
+    int? maxLines,
   });
 
   @override
