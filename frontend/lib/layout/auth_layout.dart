@@ -20,6 +20,7 @@ class AuthLayout extends StatelessWidget {
                 height: 50, // adjust height as needed
                 fit: BoxFit.contain,
               ),
+              const SizedBox(width: 13),
               Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
             ],
           ),
@@ -32,20 +33,34 @@ class AuthLayout extends StatelessWidget {
                   )
                   : null,
         ),
-        body: Center(
-          child: SingleChildScrollView(
-            child: SizedBox(
-              width: 640,
-              child: Center(
-                child: ReusableCardWidget(
-                  child: Padding(
-                    padding: const EdgeInsets.all(83),
-                    child: child,
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: Opacity(
+                opacity: 0.2,
+                child: Image.asset(
+                  'assets/images/1.jpg', // 👉 your background image
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+
+            Center(
+              child: SingleChildScrollView(
+                child: SizedBox(
+                  width: 640,
+                  child: Center(
+                    child: ReusableCardWidget(
+                      child: Padding(
+                        padding: const EdgeInsets.all(83),
+                        child: child,
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );

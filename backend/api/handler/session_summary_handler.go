@@ -1,11 +1,12 @@
 package handler
 
 import (
+	"net/http"
+
 	"depression-diagnosis-system/api/controller"
 	"depression-diagnosis-system/api/interfaces"
+	"depression-diagnosis-system/api/util"
 	"depression-diagnosis-system/database/model"
-	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,73 +21,118 @@ func NewSessionSummaryHandler() *SessionSummaryHandler {
 	}
 }
 
-func (ssh *SessionSummaryHandler) CreateSessionSummary(c *gin.Context) {
-	var req struct {
-		Notes string `json:"notes" binding:"required"`
+// CreateSummary creates a session summary (only admin or psychiatrist)
+func (ssh *SessionSummaryHandler) CreateSummary(c *gin.Context) {
+	roleI, exists := c.Get("userRole")
+	if !exists {
+		c.JSON(http.StatusForbidden, gin.H{"message": "Unauthorized"})
+		return
 	}
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status":  http.StatusBadRequest,
-			"message": "Invalid input: " + err.Error(),
-		})
+	role, ok := roleI.(string)
+	if !ok || (role != "admin" && role != "psychiatrist") {
+		c.JSON(http.StatusForbidden, gin.H{"message": "Only admins or psychiatrists can create session summaries"})
 		return
 	}
 
-	sessionID, err := strconv.ParseUint(c.Param("id"), 10, 32)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status":  http.StatusBadRequest,
-			"message": "Invalid session ID",
-		})
+	var input model.SessionSummary
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid input: " + err.Error()})
 		return
 	}
 
-	summary := &model.SessionSummary{
-		SessionID: uint(sessionID),
-		Notes:     req.Notes,
-	}
-
-	created, err := ssh.SessionSummaryController.CreateSessionSummary(summary)
+	createdSummary, err := ssh.SessionSummaryController.CreateSummary(&input)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"status":  http.StatusInternalServerError,
-			"message": "Failed to create session summary: " + err.Error(),
-		})
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to create session summary: " + err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"status":  http.StatusCreated,
-		"message": "Session summary created successfully",
-		"summary": gin.H{
-			"sessionID": created.SessionID,
-			"notes":     created.Notes,
-		},
+		"message":         "Session summary created successfully",
+		"session_summary": createdSummary,
 	})
 }
 
-func (ssh *SessionSummaryHandler) GetSessionSummary(c *gin.Context) {
-	sessionID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+// GetSummaryBySessionID fetches summary by session ID (open to authenticated users)
+func (ssh *SessionSummaryHandler) GetSummaryBySessionID(c *gin.Context) {
+	sessionID, err := util.GetIDParam(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status":  http.StatusBadRequest,
-			"message": "Invalid session ID",
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid session ID"})
 		return
 	}
 
-	summary, err := ssh.SessionSummaryController.GetSessionSummaryBySessionID(uint(sessionID))
+	summary, err := ssh.SessionSummaryController.GetSummaryBySessionID(sessionID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"status":  http.StatusInternalServerError,
-			"message": "Failed to retrieve session summary: " + err.Error(),
-		})
+		c.JSON(http.StatusNotFound, gin.H{"message": "Session summary not found: " + err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"status":  http.StatusOK,
-		"summary": summary,
+		"session_summary": summary,
+	})
+}
+
+// UpdateSummary updates a session summary (only admin or psychiatrist)
+func (ssh *SessionSummaryHandler) UpdateSummary(c *gin.Context) {
+	roleI, exists := c.Get("userRole")
+	if !exists {
+		c.JSON(http.StatusForbidden, gin.H{"message": "Unauthorized"})
+		return
+	}
+	role, ok := roleI.(string)
+	if !ok || (role != "admin" && role != "psychiatrist") {
+		c.JSON(http.StatusForbidden, gin.H{"message": "Only admins or psychiatrists can update session summaries"})
+		return
+	}
+
+	id, err := util.GetIDParam(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid summary ID"})
+		return
+	}
+
+	var input model.SessionSummary
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid input: " + err.Error()})
+		return
+	}
+
+	updatedSummary, err := ssh.SessionSummaryController.UpdateSummary(id, &input)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to update session summary: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":         "Session summary updated successfully",
+		"session_summary": updatedSummary,
+	})
+}
+
+// DeleteSummary deletes a session summary by ID (only admin)
+func (ssh *SessionSummaryHandler) DeleteSummary(c *gin.Context) {
+	roleI, exists := c.Get("userRole")
+	if !exists {
+		c.JSON(http.StatusForbidden, gin.H{"message": "Unauthorized"})
+		return
+	}
+	role, ok := roleI.(string)
+	if !ok || role != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"message": "Only admins can delete session summaries"})
+		return
+	}
+
+	id, err := util.GetIDParam(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid summary ID"})
+		return
+	}
+
+	if err := ssh.SessionSummaryController.DeleteSummary(id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to delete session summary: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Session summary deleted successfully",
 	})
 }

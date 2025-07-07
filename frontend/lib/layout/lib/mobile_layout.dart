@@ -5,6 +5,7 @@ class MobileLayout extends StatelessWidget {
   final void Function(int) onNavTap;
   final Widget screen;
   final List<BottomNavigationBarItem> navigationItems;
+  final Widget? floatingActionButton;
 
   const MobileLayout({
     super.key,
@@ -12,6 +13,7 @@ class MobileLayout extends StatelessWidget {
     required this.onNavTap,
     required this.screen,
     required this.navigationItems,
+    this.floatingActionButton,
   });
 
   @override
@@ -23,12 +25,16 @@ class MobileLayout extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
         child: screen,
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        selectedItemColor: colorScheme.primary,
-        currentIndex: selectedIndex,
-        onTap: onNavTap,
-        items: navigationItems,
-        type: BottomNavigationBarType.fixed,
+      floatingActionButton: this.floatingActionButton,
+      bottomNavigationBar: SizedBox(
+        height: 94,
+        child: BottomNavigationBar(
+          selectedItemColor: colorScheme.primary,
+          currentIndex: selectedIndex,
+          onTap: onNavTap,
+          items: navigationItems,
+          type: BottomNavigationBarType.fixed,
+        ),
       ),
     );
   }

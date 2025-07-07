@@ -34,13 +34,15 @@ func Conn() {
 
 func DBMigrate() {
 	if err := DB.AutoMigrate(
-		&model.Admin{},
+		&model.HealthWorker{},
+		&model.Department{},
+		&model.PersonnelType{},
 		&model.Patient{},
+		&model.MedicationHistory{},
 		&model.Session{},
 		&model.Diagnosis{},
 		&model.Phq9Question{},
 		&model.Phq9Response{},
-		&model.Psychiatrist{},
 		&model.SessionSummary{},
 		); err != nil {
 		log.Fatalf("❌ Error migrating database: %v\n", err)
@@ -49,25 +51,6 @@ func DBMigrate() {
 	}
 }
 
-func SeedPHQ9Questions() {
-    questions := []model.Phq9Question{
-        {Question: "Little interest or pleasure in doing things?"},
-        {Question: "Feeling down, depressed, or hopeless?"},
-        {Question: "Trouble falling or staying asleep, or sleeping too much?"},
-        {Question: "Feeling tired or having little energy?"},
-        {Question: "Poor appetite or overeating?"},
-        {Question: "Feeling bad about yourself — or that you are a failure or have let yourself or your family down?"},
-        {Question: "Trouble concentrating on things, such as reading the newspaper or watching television?"},
-        {Question: "Moving or speaking so slowly that other people could have noticed? Or the opposite — being so fidgety or restless that you have been moving around a lot more than usual?"},
-        {Question: "Thoughts that you would be better off dead, or of hurting yourself in some way?"},
-    }
 
-    for _, question := range questions {
-        var existing model.Phq9Question
-		result := DB.Where("question = ?", question.Question).First(&existing)
-        if result.Error != nil {
-            DB.Create(&question) 
-        }
-    }
 
-}
+

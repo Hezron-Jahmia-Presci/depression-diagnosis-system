@@ -6,6 +6,8 @@ class ReusableDropdownWidget extends StatelessWidget {
   final Function(String?) onChanged;
   final String label;
   final String? Function(String?)? validator;
+  final String listItems;
+  final String? secondListItem;
 
   const ReusableDropdownWidget({
     super.key,
@@ -13,7 +15,9 @@ class ReusableDropdownWidget extends StatelessWidget {
     required this.items,
     required this.onChanged,
     required this.label,
+    required this.listItems,
     this.validator,
+    this.secondListItem,
   });
 
   @override
@@ -25,7 +29,10 @@ class ReusableDropdownWidget extends StatelessWidget {
         labelText: label,
         filled: true,
         fillColor: colorScheme.onPrimary,
-        contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 12,
+          horizontal: 16,
+        ),
         focusedBorder: OutlineInputBorder(
           borderSide: BorderSide(color: colorScheme.tertiary),
           borderRadius: BorderRadius.circular(8),
@@ -38,11 +45,11 @@ class ReusableDropdownWidget extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
         ),
         errorBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.redAccent, width: 1.5),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
           borderRadius: BorderRadius.circular(8),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.redAccent, width: 1.5),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
           borderRadius: BorderRadius.circular(8),
         ),
       ),
@@ -50,7 +57,12 @@ class ReusableDropdownWidget extends StatelessWidget {
           items.map((item) {
             return DropdownMenuItem<String>(
               value: item['ID'].toString(),
-              child: Text("${item['first_name']} ${item['last_name']}"),
+              child: Text(
+                secondListItem != null
+                    ? "${item[listItems] ?? ''} ${item[secondListItem] ?? ''}"
+                        .trim()
+                    : (item[listItems] ?? '').toString(),
+              ),
             );
           }).toList(),
       onChanged: onChanged,
