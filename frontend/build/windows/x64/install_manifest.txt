@@ -5,6 +5,8 @@ C:/Users/Hezron Jahmia/Documents/Software Development/depression-diagnosis-syste
 C:/Users/Hezron Jahmia/Documents/Software Development/depression-diagnosis-system/frontend/build/windows/x64/runner/Debug/data/flutter_assets/AssetManifest.bin
 C:/Users/Hezron Jahmia/Documents/Software Development/depression-diagnosis-system/frontend/build/windows/x64/runner/Debug/data/flutter_assets/AssetManifest.bin.json
 C:/Users/Hezron Jahmia/Documents/Software Development/depression-diagnosis-system/frontend/build/windows/x64/runner/Debug/data/flutter_assets/AssetManifest.json
+C:/Users/Hezron Jahmia/Documents/Software Development/depression-diagnosis-system/frontend/build/windows/x64/runner/Debug/data/flutter_assets/assets/images/1.jpg
+C:/Users/Hezron Jahmia/Documents/Software Development/depression-diagnosis-system/frontend/build/windows/x64/runner/Debug/data/flutter_assets/assets/images/2.jpg
 C:/Users/Hezron Jahmia/Documents/Software Development/depression-diagnosis-system/frontend/build/windows/x64/runner/Debug/data/flutter_assets/assets/images/launcher_icon.png
 C:/Users/Hezron Jahmia/Documents/Software Development/depression-diagnosis-system/frontend/build/windows/x64/runner/Debug/data/flutter_assets/assets/images/logo.png
 C:/Users/Hezron Jahmia/Documents/Software Development/depression-diagnosis-system/frontend/build/windows/x64/runner/Debug/data/flutter_assets/FontManifest.json

@@ -34,7 +34,7 @@ class _RegisterPatientScreenState extends State<RegisterPatientScreen> {
   final _dateOfBirthController = TextEditingController();
   final _dateOfAdmissionController = TextEditingController();
 
-  List<Map<String, String>> _medicationHistories = [];
+  final List<Map<String, String>> _medicationHistories = [];
 
   final _medPrescriptionController = TextEditingController();
   final _medHealthCenterController = TextEditingController();

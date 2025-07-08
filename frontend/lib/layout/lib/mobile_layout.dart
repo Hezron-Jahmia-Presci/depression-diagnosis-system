@@ -25,7 +25,7 @@ class MobileLayout extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
         child: screen,
       ),
-      floatingActionButton: this.floatingActionButton,
+      floatingActionButton: floatingActionButton,
       bottomNavigationBar: SizedBox(
         height: 94,
         child: BottomNavigationBar(

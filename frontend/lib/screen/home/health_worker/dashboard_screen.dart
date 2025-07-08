@@ -118,6 +118,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     return ListView(
+      padding: EdgeInsets.symmetric(horizontal: 24.0),
       children: [
         Wrap(
           spacing: 16,
@@ -172,7 +173,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       width: MediaQuery.of(context).size.width > 600 ? 260 : double.infinity,
       child: ReusableCardWidget(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(24.0),
           child: Row(
             children: [
               Icon(icon, size: 40, color: color),
@@ -279,7 +280,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   barWidth: 3,
                   belowBarData: BarAreaData(
                     show: true,
-                    color: colorScheme.primary.withOpacity(0.2),
+                    color: colorScheme.primary.withValues(alpha: 0.2),
                   ),
                   dotData: FlDotData(show: true),
                 ),

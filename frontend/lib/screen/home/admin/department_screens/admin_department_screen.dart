@@ -129,6 +129,7 @@ class AdminDepartmentScreenState extends State<AdminDepartmentScreen> {
         Expanded(
           child: ListView.separated(
             itemCount: _filteredDepartments.length,
+            padding: EdgeInsets.symmetric(horizontal: 24.0),
             separatorBuilder: (_, __) => const SizedBox(height: 10),
             itemBuilder: (context, index) {
               final dept = _filteredDepartments[index];

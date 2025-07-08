@@ -33,6 +33,7 @@ class _AppLayoutState extends State<AppLayout> {
   bool _isLoading = true;
   bool _hasError = false;
   bool _isFabVisible = true;
+  bool _showingInbox = false;
 
   late List<Widget> _screens;
   late final Map<int, FabConfig> _fabConfigs = {
@@ -208,7 +209,7 @@ class _AppLayoutState extends State<AppLayout> {
       userDetails: _userDetails,
       isLoading: _isLoading,
       hasError: _hasError,
-      onProfileTap: () => _onNavTap(4),
+      onProfileTap: () => _onNavTap(5),
       navigationItems: [
         SidebarNavItem(
           index: 0,
@@ -263,6 +264,17 @@ class _AppLayoutState extends State<AppLayout> {
             ],
           ),
           actions: [
+            IconButton(
+              onPressed: () {
+                setState(() {
+                  _showingInbox = true;
+                });
+              },
+              icon: const Icon(Icons.message_outlined),
+            ),
+
+            SizedBox(width: 13),
+
             PopupMenuButton(
               onSelected: (value) async {
                 if (value == 'logout') await _handleLogout();
@@ -282,7 +294,14 @@ class _AppLayoutState extends State<AppLayout> {
                     floatingActionButton: _buildFAB(),
                     selectedIndex: _selectedIndex,
                     onNavTap: _onNavTap,
-                    screen: _screens[_selectedIndex],
+                    screen:
+                        _showingInbox
+                            ? MessageInboxScreen(
+                              onBack:
+                                  () => setState(() => _showingInbox = false),
+                            )
+                            : _screens[_selectedIndex],
+
                     navigationItems: const [
                       BottomNavigationBarItem(
                         icon: Icon(Icons.dashboard_outlined),
@@ -312,7 +331,13 @@ class _AppLayoutState extends State<AppLayout> {
                     ],
                   )
                   : DesktopLayout(
-                    primaryScreen: _screens[_selectedIndex],
+                    primaryScreen:
+                        _showingInbox
+                            ? MessageInboxScreen(
+                              onBack:
+                                  () => setState(() => _showingInbox = false),
+                            )
+                            : _screens[_selectedIndex],
                     sidebar: sidebar,
                     floatingActionButton: _buildFAB(),
                   ),

@@ -192,11 +192,13 @@ class HealthWorkerService extends BaseService {
       final Map<String, String> queryParams = {};
       if (name != null && name.isNotEmpty) queryParams['name'] = name;
       if (email != null && email.isNotEmpty) queryParams['email'] = email;
-      if (employeeID != null && employeeID.isNotEmpty)
+      if (employeeID != null && employeeID.isNotEmpty) {
         queryParams['employee_id'] = employeeID;
+      }
       if (role != null && role.isNotEmpty) queryParams['role'] = role;
-      if (departmentID != null && departmentID.isNotEmpty)
+      if (departmentID != null && departmentID.isNotEmpty) {
         queryParams['department_id'] = departmentID;
+      }
       if (isActive != null) queryParams['is_active'] = isActive.toString();
 
       final uri = Uri.parse(

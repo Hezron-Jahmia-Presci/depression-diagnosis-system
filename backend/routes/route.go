@@ -17,6 +17,7 @@ func Routes(router *gin.Engine) {
 	diagnosisHandler := handler.NewDiagnosisHandler()
 	sessionHandler := handler.NewSessionHandler()
 	summaryHandler := handler.NewSessionSummaryHandler()
+	messageHandler := handler.NewMessageHandler()
 
 	// ------------------- Health Worker Routes -------------------
 	healthRoutes := router.Group("/api/v1/health-workers")
@@ -142,4 +143,14 @@ func Routes(router *gin.Engine) {
 		medicationHistoryRoutes.DELETE("/:id", medicationHistoryHandler.DeleteMedicationHistory)
 		medicationHistoryRoutes.GET("/search", medicationHistoryHandler.SearchMedicationHistories)
 	}
+
+	// ------------------- Message Routes -------------------
+	messageRoutes := router.Group("/api/v1/messages")
+	messageRoutes.Use(middleware.AuthMiddleware())
+	{
+		messageRoutes.POST("/send", messageHandler.SendMessage)   
+		messageRoutes.GET("/between", messageHandler.GetMessagesBetween)    
+		messageRoutes.GET("/inbox", messageHandler.GetInbox)             
+	}
 }
+

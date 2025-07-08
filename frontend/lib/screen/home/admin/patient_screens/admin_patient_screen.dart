@@ -136,6 +136,7 @@ class AdminPatientScreenState extends State<AdminPatientScreen> {
         Expanded(
           child: ListView.separated(
             itemCount: _filteredPatients.length,
+            padding: EdgeInsets.symmetric(horizontal: 24.0),
             separatorBuilder: (_, __) => const SizedBox(height: 10),
             itemBuilder: (_, index) {
               final patient = _filteredPatients[index];

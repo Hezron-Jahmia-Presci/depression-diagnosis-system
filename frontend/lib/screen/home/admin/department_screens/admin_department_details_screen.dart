@@ -41,7 +41,6 @@ class _AdminDepartmentDetailsScreenState
         (d) => d['ID'] == widget.departmentID,
         orElse: () => {},
       );
-      print(all);
       setState(() {
         _departmentDetails = selected.isNotEmpty ? selected : null;
         _hasError = _departmentDetails == null;
@@ -125,22 +124,20 @@ class _AdminDepartmentDetailsScreenState
                 child: ListView(
                   padding: const EdgeInsets.symmetric(horizontal: 33),
                   children: [
-                    ReusableCardWidget(
-                      child: Column(
-                        children: [
-                          Text(
-                            dept['name'],
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                            ),
+                    Column(
+                      children: [
+                        Text(
+                          dept['name'],
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
                           ),
-                          const SizedBox(height: 20),
-                          Text(dept['description']),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(height: 20),
+                        Text(dept['description']),
+                      ],
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 33),
                     ReusableButtonWidget(
                       text: 'Edit Details',
                       isLoading: false,

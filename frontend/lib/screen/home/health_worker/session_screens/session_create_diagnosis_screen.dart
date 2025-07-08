@@ -86,12 +86,17 @@ class _CreateDiagnosisScreenState extends State<CreateDiagnosisScreen> {
         responsePayload,
       );
       if (recorded == null || recorded['error'] != null) {
-        ReusableSnackbarWidget.show(context, 'Failed to record response!');
+        if (mounted) {
+          ReusableSnackbarWidget.show(context, 'Failed to record response!');
+        }
         return;
       }
 
       if (_responses!.any((r) => r == null)) {
-        ReusableSnackbarWidget.show(context, 'Please answer all questions.');
+        if (mounted) {
+          ReusableSnackbarWidget.show(context, 'Please answer all questions.');
+        }
+
         return;
       }
 
@@ -110,10 +115,12 @@ class _CreateDiagnosisScreenState extends State<CreateDiagnosisScreen> {
         widget.onComplete();
       }
     } catch (_) {
-      ReusableSnackbarWidget.show(
-        context,
-        'An error occurred during submission.',
-      );
+      if (mounted) {
+        ReusableSnackbarWidget.show(
+          context,
+          'An error occurred during submission.',
+        );
+      }
     } finally {
       setState(() => _isSubmitting = false);
     }

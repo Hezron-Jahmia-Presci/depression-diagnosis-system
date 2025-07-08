@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+
 import 'package:depression_diagnosis_system/service/lib/phq9_response_service.dart';
 import 'package:depression_diagnosis_system/service/lib/session_service.dart';
 import 'package:depression_diagnosis_system/service/lib/phq9_question_service.dart';
 import 'package:depression_diagnosis_system/service/lib/diagnosis_service.dart';
 import 'package:depression_diagnosis_system/service/lib/session_summary_service.dart';
+
 import '../../../../widget/widget_exporter.dart';
 import '../../../screens_exporter.dart';
-import 'session_create_diagnosis_screen.dart';
 
 class SessionDetailsScreen extends StatefulWidget {
   final int sessionID;

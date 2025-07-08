@@ -90,7 +90,7 @@ class Phq9QuestionScreenState extends State<Phq9QuestionScreen> {
 
     return ListView.separated(
       itemCount: _filteredQuestions.length,
-      padding: EdgeInsets.symmetric(horizontal: 24),
+      padding: EdgeInsets.symmetric(horizontal: 24.0),
       separatorBuilder: (_, __) => const SizedBox(height: 10),
       itemBuilder: (_, index) {
         final question = _filteredQuestions[index];

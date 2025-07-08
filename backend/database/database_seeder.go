@@ -15,6 +15,7 @@ func RunAllSeeders() {
 	SeedAdminUser()
 	SeedHealthWorkers()
 	SeedDummyPatients()
+	SeedMessages()
 }
 
 func SeedDepartments() {
@@ -351,3 +352,53 @@ func SeedDummyPatients() {
 		}
 	}
 }
+
+func SeedMessages() {
+	var healthWorkers []model.HealthWorker
+	// Get all health workers excluding admins, to seed messages between them
+	if err := DB.Where("role = ?", model.RoleHealthWorker).Find(&healthWorkers).Error; err != nil {
+		log.Printf("❌ Failed to load health workers for seeding messages: %v", err)
+		return
+	}
+
+	if len(healthWorkers) < 2 {
+		log.Println("⚠️ Not enough health workers to seed messages")
+		return
+	}
+
+	messages := []string{
+		"Hello, how are you today?",
+		"Can you update me on the patient in room 5?",
+		"Please review the latest lab results when you have time.",
+		"Do you have availability for a case discussion tomorrow?",
+		"Thanks for your support during the last session.",
+		"Could you share the treatment plan document?",
+		"Let's coordinate on the follow-up appointments.",
+		"Have you seen the new hospital guidelines?",
+		"I'm forwarding the patient files for your review.",
+		"Please let me know if you need any assistance.",
+	}
+
+	now := time.Now()
+
+	// We'll create messages between pairs in a simple pattern
+	for i := 0; i < len(healthWorkers)-1; i++ {
+		sender := healthWorkers[i]
+		receiver := healthWorkers[i+1]
+
+		for j, text := range messages {
+			msg := model.Message{
+				SenderID:   sender.ID,
+				ReceiverID: receiver.ID,
+				Message:    text,
+				Timestamp:  now.Add(time.Duration(j) * time.Minute),
+			}
+			if err := DB.Create(&msg).Error; err != nil {
+				log.Printf("❌ Failed to create message from %s to %s: %v", sender.Email, receiver.Email, err)
+			} else {
+				log.Printf("✉️ Message seeded from %s to %s: %s", sender.Email, receiver.Email, text)
+			}
+		}
+	}
+}
+

@@ -102,7 +102,9 @@ class _FooterText extends StatelessWidget {
         '© 2025 Butabika National Mental Referral Hospital. All rights reserved.',
         textAlign: TextAlign.center,
         style: TextStyle(
-          color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.6),
+          color: Theme.of(
+            context,
+          ).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
           fontSize: 14,
         ),
       ),

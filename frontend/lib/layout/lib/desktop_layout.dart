@@ -30,7 +30,7 @@ class DesktopLayout extends StatelessWidget {
           ),
         ],
       ),
-      floatingActionButton: this.floatingActionButton,
+      floatingActionButton: floatingActionButton,
     );
   }
 }

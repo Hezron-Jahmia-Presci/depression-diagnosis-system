@@ -119,49 +119,52 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
     return ListView(
       children: [
-        Wrap(
-          spacing: 16,
-          runSpacing: 16,
-          children: [
-            _buildCard(
-              "Patients",
-              _totalPatients,
-              Icons.person,
-              Colors.deepPurple,
-            ),
-            _buildCard("Sessions", _totalSessions, Icons.event, Colors.teal),
-            _buildCard(
-              "Health Workers",
-              _totalHealthWorkers,
-              Icons.group,
-              Colors.indigo,
-            ),
-            _buildCard(
-              "Departments",
-              _totalDepartments,
-              Icons.apartment,
-              Colors.brown,
-            ),
-            _buildCard(
-              "Medications",
-              _totalMedications,
-              Icons.medication,
-              Colors.green,
-            ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Wrap(
+            spacing: 16,
+            runSpacing: 16,
+            children: [
+              _buildCard(
+                "Patients",
+                _totalPatients,
+                Icons.person,
+                Colors.deepPurple,
+              ),
+              _buildCard("Sessions", _totalSessions, Icons.event, Colors.teal),
+              _buildCard(
+                "Health Workers",
+                _totalHealthWorkers,
+                Icons.group,
+                Colors.indigo,
+              ),
+              _buildCard(
+                "Departments",
+                _totalDepartments,
+                Icons.apartment,
+                Colors.brown,
+              ),
+              _buildCard(
+                "Medications",
+                _totalMedications,
+                Icons.medication,
+                Colors.green,
+              ),
 
-            _buildCard(
-              "Sessions This Week",
-              _weeklySessions,
-              Icons.calendar_view_week,
-              Colors.orange,
-            ),
-            _buildCard(
-              "Sessions This Month",
-              _monthlySessions,
-              Icons.calendar_month,
-              Colors.blue,
-            ),
-          ],
+              _buildCard(
+                "Sessions This Week",
+                _weeklySessions,
+                Icons.calendar_view_week,
+                Colors.orange,
+              ),
+              _buildCard(
+                "Sessions This Month",
+                _monthlySessions,
+                Icons.calendar_month,
+                Colors.blue,
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 32),
         _buildSectionTitle("Recent Admissions"),
@@ -211,7 +214,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       width: MediaQuery.of(context).size.width > 600 ? 260 : double.infinity,
       child: ReusableCardWidget(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(24),
           child: Row(
             children: [
               Icon(icon, size: 40, color: color),

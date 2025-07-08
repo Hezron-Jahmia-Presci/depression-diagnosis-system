@@ -91,36 +91,28 @@ class _MedicationHistoriesDetailsScreenState
           child: Row(
             children: [
               Expanded(
-                child: ListView(
+                child: Column(
                   children: [
-                    ReusableCardWidget(
-                      child: Column(
-                        children: [
-                          CircleAvatar(
-                            radius: 128,
-                            backgroundImage:
-                                imageUrl.isNotEmpty
-                                    ? NetworkImage(imageUrl)
-                                    : null,
-                            child:
-                                imageUrl.isEmpty
-                                    ? const Icon(Icons.person, size: 60)
-                                    : null,
-                          ),
+                    CircleAvatar(
+                      radius: 128,
+                      backgroundImage:
+                          imageUrl.isNotEmpty ? NetworkImage(imageUrl) : null,
+                      child:
+                          imageUrl.isEmpty
+                              ? const Icon(Icons.person, size: 60)
+                              : null,
+                    ),
 
-                          const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                          Text(
-                            fullName,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text('Patient Code: $patientCode'),
-                        ],
+                    Text(
+                      fullName,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
+                    Text('Patient Code: $patientCode'),
                   ],
                 ),
               ),

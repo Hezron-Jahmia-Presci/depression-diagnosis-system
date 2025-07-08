@@ -125,6 +125,7 @@ class AdminPersonnelTypeScreenState extends State<AdminPersonnelTypeScreen> {
         Expanded(
           child: ListView.separated(
             itemCount: _filteredPersonnelTypes.length,
+            padding: EdgeInsets.symmetric(horizontal: 24.0),
             separatorBuilder: (_, __) => const SizedBox(height: 10),
             itemBuilder: (_, index) {
               final personnel = _filteredPersonnelTypes[index];

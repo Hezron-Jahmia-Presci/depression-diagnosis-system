@@ -44,6 +44,7 @@ func DBMigrate() {
 		&model.Phq9Question{},
 		&model.Phq9Response{},
 		&model.SessionSummary{},
+		&model.Message{},
 		); err != nil {
 		log.Fatalf("❌ Error migrating database: %v\n", err)
 	} else {

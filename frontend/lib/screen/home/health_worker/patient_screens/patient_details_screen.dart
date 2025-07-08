@@ -134,122 +134,119 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
               // Left: Avatar & Button
               Expanded(
                 child: ListView(
+                  padding: EdgeInsets.symmetric(horizontal: 33.0),
                   children: [
-                    ReusableCardWidget(
-                      child: Column(
-                        children: [
-                          CircleAvatar(
-                            radius: 128,
-                            backgroundImage:
-                                imageUrl.isNotEmpty
-                                    ? NetworkImage(imageUrl)
-                                    : null,
-                            child:
-                                imageUrl.isEmpty
-                                    ? const Icon(Icons.person, size: 60)
-                                    : null,
+                    Column(
+                      children: [
+                        CircleAvatar(
+                          radius: 128,
+                          backgroundImage:
+                              imageUrl.isNotEmpty
+                                  ? NetworkImage(imageUrl)
+                                  : null,
+                          child:
+                              imageUrl.isEmpty
+                                  ? const Icon(Icons.person, size: 60)
+                                  : null,
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        Text(
+                          '${patient['first_name']} ${patient['last_name']}',
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
                           ),
+                        ),
 
-                          const SizedBox(height: 16),
+                        const SizedBox(height: 16),
 
-                          Text(
-                            '${patient['first_name']} ${patient['last_name']}',
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        Text(patient['patient_code'] ?? 'No Code'),
+
+                        const SizedBox(height: 20),
+
+                        SizedBox(
+                          width: double.infinity,
+                          child: ReusableButtonWidget(
+                            text: 'Edit Details',
+                            isLoading: false,
+                            onPressed: () => _openEditScreen(patient['ID']),
                           ),
-
-                          const SizedBox(height: 16),
-
-                          Text(patient['patient_code'] ?? 'No Code'),
-
-                          const SizedBox(height: 20),
-
+                        ),
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ReusableButtonWidget(
+                            text:
+                                patient['is_active'] == true
+                                    ? 'Deactivate'
+                                    : 'Activate',
+                            backgroundColor:
+                                patient['is_active'] == true
+                                    ? colorScheme.secondary
+                                    : colorScheme.tertiary,
+                            onPressed: () async {
+                              final confirm = await _showConfirmationDialog(
+                                context,
+                                patient['is_active'] == true
+                                    ? 'Are you sure you want to deactivate this account?'
+                                    : 'Are you sure you want to activate this account?',
+                              );
+                              if (confirm == true) {
+                                final result = await _patientService
+                                    .setActiveStatus(
+                                      patient['ID'],
+                                      !(patient['is_active'] == true),
+                                    );
+                                if (context.mounted) {
+                                  final msg =
+                                      result?['message'] ??
+                                      result?['error'] ??
+                                      'Failed';
+                                  ScaffoldMessenger.of(
+                                    context,
+                                  ).showSnackBar(SnackBar(content: Text(msg)));
+                                }
+                                _fetchPatientDetails();
+                              }
+                            },
+                            isLoading: _isLoading,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        if (patient['is_active'] == false)
                           SizedBox(
                             width: double.infinity,
                             child: ReusableButtonWidget(
-                              text: 'Edit Details',
-                              isLoading: false,
-                              onPressed: () => _openEditScreen(patient['ID']),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ReusableButtonWidget(
-                              text:
-                                  patient['is_active'] == true
-                                      ? 'Deactivate'
-                                      : 'Activate',
-                              backgroundColor:
-                                  patient['is_active'] == true
-                                      ? colorScheme.secondary
-                                      : colorScheme.tertiary,
+                              text: 'Delete Health Worker',
+                              backgroundColor: colorScheme.error,
                               onPressed: () async {
                                 final confirm = await _showConfirmationDialog(
                                   context,
-                                  patient['is_active'] == true
-                                      ? 'Are you sure you want to deactivate this account?'
-                                      : 'Are you sure you want to activate this account?',
+                                  'Are you sure you want to permanently delete this health worker?',
                                 );
                                 if (confirm == true) {
-                                  final result = await _patientService
-                                      .setActiveStatus(
-                                        patient['ID'],
-                                        !(patient['is_active'] == true),
-                                      );
+                                  final success = await _patientService
+                                      .deletePatient(patient['ID']);
                                   if (context.mounted) {
-                                    final msg =
-                                        result?['message'] ??
-                                        result?['error'] ??
-                                        'Failed';
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(msg)),
+                                      SnackBar(
+                                        content: Text(
+                                          success
+                                              ? 'Deleted successfully'
+                                              : 'Failed to delete health worker',
+                                        ),
+                                      ),
                                     );
+                                    if (success) widget.onBack();
                                   }
-                                  _fetchPatientDetails();
                                 }
                               },
                               isLoading: _isLoading,
                             ),
                           ),
-                          const SizedBox(height: 20),
-                          if (patient['is_active'] == false)
-                            SizedBox(
-                              width: double.infinity,
-                              child: ReusableButtonWidget(
-                                text: 'Delete Health Worker',
-                                backgroundColor: colorScheme.error,
-                                onPressed: () async {
-                                  final confirm = await _showConfirmationDialog(
-                                    context,
-                                    'Are you sure you want to permanently delete this health worker?',
-                                  );
-                                  if (confirm == true) {
-                                    final success = await _patientService
-                                        .deletePatient(patient['ID']);
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            success
-                                                ? 'Deleted successfully'
-                                                : 'Failed to delete health worker',
-                                          ),
-                                        ),
-                                      );
-                                      if (success) widget.onBack();
-                                    }
-                                  }
-                                },
-                                isLoading: _isLoading,
-                              ),
-                            ),
-                        ],
-                      ),
+                      ],
                     ),
 
                     const SizedBox(height: 55),
