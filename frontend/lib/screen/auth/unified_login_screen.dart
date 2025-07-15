@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+
+import 'package:depression_diagnosis_system/layout/nurse_layout.dart';
 import 'package:depression_diagnosis_system/layout/admin_layout.dart';
-import 'package:depression_diagnosis_system/layout/app_layout.dart';
+import 'package:depression_diagnosis_system/layout/healthworker_layout.dart';
 import 'package:depression_diagnosis_system/service/lib/health_worker_service.dart';
 import '../../layout/auth_layout.dart';
 import '../../widget/widget_exporter.dart';
 
 class UnifiedLoginScreen extends StatefulWidget {
-  const UnifiedLoginScreen({super.key});
+  final void Function() toggleTheme;
+  const UnifiedLoginScreen({super.key, required this.toggleTheme});
 
   @override
   State<UnifiedLoginScreen> createState() => _UnifiedLoginScreenState();
@@ -44,19 +47,40 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
 
     if (res != null && res['error'] == null) {
       final role = res['health_worker']?['role'] ?? '';
+      final personnelType =
+          res['health_worker']?['PersonnelType']?['name'] ?? '';
 
       if (role == 'admin') {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) => const AdminLayout(title: 'Admin Dashboard'),
+            builder:
+                (_) => AdminLayout(
+                  title: 'Admin Dashboard',
+                  toggleTheme: widget.toggleTheme,
+                ),
+          ),
+        );
+      } else if (personnelType == 'Nurse' || personnelType == 'Midwife') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder:
+                (_) => NurseLayout(
+                  title: 'Nurse Dashboard',
+                  toggleTheme: widget.toggleTheme,
+                ),
           ),
         );
       } else {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) => const AppLayout(title: 'Health Worker Dashboard'),
+            builder:
+                (_) => HealthWorkerLayout(
+                  title: 'Health Worker Dashboard',
+                  toggleTheme: widget.toggleTheme,
+                ),
           ),
         );
       }

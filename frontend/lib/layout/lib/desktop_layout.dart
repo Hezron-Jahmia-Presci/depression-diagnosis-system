@@ -1,5 +1,6 @@
 // lib/layout/lib/desktop_layout.dart
 
+import 'package:depression_diagnosis_system/constants/layout_constant.dart';
 import 'package:flutter/material.dart';
 
 class DesktopLayout extends StatelessWidget {
@@ -17,16 +18,34 @@ class DesktopLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Row(
+      body: Stack(
         children: [
-          sidebar,
-          const SizedBox(width: 18),
-          Expanded(
-            flex: 7,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: primaryScreen,
+          // Background Image
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.3,
+              child: Image.asset(
+                backgroundImagePath,
+                fit: BoxFit.cover,
+                color: Colors.green, // green overlay
+                colorBlendMode:
+                    BlendMode.multiply, // or BlendMode.overlay / screen / etc.
+              ),
             ),
+          ),
+
+          Row(
+            children: [
+              sidebar,
+              const SizedBox(width: 18),
+              Expanded(
+                flex: 7,
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: primaryScreen,
+                ),
+              ),
+            ],
           ),
         ],
       ),

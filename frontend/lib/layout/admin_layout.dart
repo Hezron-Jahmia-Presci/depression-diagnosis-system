@@ -9,7 +9,12 @@ import '../widget/widget_exporter.dart';
 
 class AdminLayout extends StatefulWidget {
   final String title;
-  const AdminLayout({required this.title, super.key});
+  final VoidCallback toggleTheme;
+  const AdminLayout({
+    required this.title,
+    required this.toggleTheme,
+    super.key,
+  });
 
   @override
   State<AdminLayout> createState() => _AdminLayoutState();
@@ -34,12 +39,12 @@ class _AdminLayoutState extends State<AdminLayout> {
   final HealthWorkerService _healthWorkerService = HealthWorkerService();
 
   int _selectedIndex = 0;
-
-  Map<String, dynamic>? _adminDetails;
   bool _isLoading = true;
   bool _hasError = false;
   bool _isFabVisible = true;
   bool _showingInbox = false;
+
+  Map<String, dynamic>? _adminDetails;
 
   late final List<Widget> _screens;
   late final Map<int, FabConfig> _fabConfigs = {
@@ -378,6 +383,13 @@ class _AdminLayoutState extends State<AdminLayout> {
                 });
               },
               icon: const Icon(Icons.message_outlined),
+            ),
+
+            SizedBox(width: 13),
+
+            IconButton(
+              icon: const Icon(Icons.brightness_6),
+              onPressed: widget.toggleTheme,
             ),
 
             SizedBox(width: 13),

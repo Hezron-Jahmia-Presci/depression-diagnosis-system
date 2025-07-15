@@ -23,7 +23,7 @@ export 'home/admin/admin_dashboard_screen.dart';
 
 export 'home/admin/phq9_screens/admin_phq9_screen_create.dart';
 
-export 'home/health_worker/dashboard_screen.dart';
+export 'home/health_worker/healthworker_dashboard_screen.dart';
 
 export 'home/health_worker/patient_screens/patient_register_screen.dart';
 export 'home/health_worker/patient_screens/patient_details_screen.dart';
@@ -45,4 +45,4 @@ export 'home/health_worker/medication_histories_screens/medication_histories_scr
 
 export 'home/health_worker/message_screens/message_inbox_screen.dart';
 
-// export './home/psychiatrist/session_screens/session_screen.dart';
+export 'home/nurse/nurse_dashboard_screen.dart';

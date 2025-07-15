@@ -35,7 +35,7 @@ class Phq9ResponseService extends BaseService {
     try {
       final token = await getAuthToken();
       final response = await http.get(
-        url('phq9/responses/session/$sessionID'),
+        url('phq9/responses/$sessionID'),
         headers: headersWithToken(token),
       );
 
