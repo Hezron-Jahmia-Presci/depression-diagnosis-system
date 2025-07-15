@@ -37,7 +37,7 @@ class AuthLayout extends StatelessWidget {
           children: [
             Positioned.fill(
               child: Opacity(
-                opacity: 0.2,
+                opacity: 0.3,
                 child: Image.asset(
                   'assets/images/1.jpg', // 👉 your background image
                   fit: BoxFit.cover,

@@ -124,113 +124,109 @@ class _HealthWorkerDetailsScreenState extends State<HealthWorkerDetailsScreen> {
               Expanded(
                 child: ListView(
                   children: [
-                    ReusableCardWidget(
-                      child: Column(
-                        children: [
-                          CircleAvatar(
-                            radius: 128,
-                            backgroundImage:
-                                imageUrl.isNotEmpty
-                                    ? NetworkImage(imageUrl)
-                                    : null,
-                            child:
-                                imageUrl.isEmpty
-                                    ? const Icon(Icons.person, size: 60)
-                                    : null,
+                    Column(
+                      children: [
+                        CircleAvatar(
+                          radius: 128,
+                          backgroundImage:
+                              imageUrl.isNotEmpty
+                                  ? NetworkImage(imageUrl)
+                                  : null,
+                          child:
+                              imageUrl.isEmpty
+                                  ? const Icon(Icons.person, size: 60)
+                                  : null,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          '${hw['first_name']} ${hw['last_name']}',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
                           ),
-                          const SizedBox(height: 16),
-                          Text(
-                            hw['first_name'] + ' ' + hw['last_name'],
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        ),
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ReusableButtonWidget(
+                            text: 'Edit Details',
+                            isLoading: false,
+                            onPressed: () => _goToEditScreen(hw['ID']),
                           ),
-                          const SizedBox(height: 20),
+                        ),
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ReusableButtonWidget(
+                            text:
+                                hw['is_active'] == true
+                                    ? 'Deactivate'
+                                    : 'Activate',
+                            backgroundColor:
+                                hw['is_active'] == true
+                                    ? colorScheme.secondary
+                                    : colorScheme.tertiary,
+                            onPressed: () async {
+                              final confirm = await _showConfirmationDialog(
+                                context,
+                                hw['is_active'] == true
+                                    ? 'Are you sure you want to deactivate this account?'
+                                    : 'Are you sure you want to activate this account?',
+                              );
+                              if (confirm == true) {
+                                final result = await _healthWorkerService
+                                    .setActiveStatus(
+                                      hw['ID'],
+                                      !(hw['is_active'] == true),
+                                    );
+                                if (context.mounted) {
+                                  final msg =
+                                      result?['message'] ??
+                                      result?['error'] ??
+                                      'Failed';
+                                  ScaffoldMessenger.of(
+                                    context,
+                                  ).showSnackBar(SnackBar(content: Text(msg)));
+                                }
+                                _loadHealthWorkerDetails();
+                              }
+                            },
+                            isLoading: _isLoading,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        if (hw['is_active'] == false)
                           SizedBox(
                             width: double.infinity,
                             child: ReusableButtonWidget(
-                              text: 'Edit Details',
-                              isLoading: false,
-                              onPressed: () => _goToEditScreen(hw['ID']),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ReusableButtonWidget(
-                              text:
-                                  hw['is_active'] == true
-                                      ? 'Deactivate'
-                                      : 'Activate',
-                              backgroundColor:
-                                  hw['is_active'] == true
-                                      ? colorScheme.secondary
-                                      : colorScheme.tertiary,
+                              text: 'Delete Health Worker',
+                              backgroundColor: colorScheme.error,
                               onPressed: () async {
                                 final confirm = await _showConfirmationDialog(
                                   context,
-                                  hw['is_active'] == true
-                                      ? 'Are you sure you want to deactivate this account?'
-                                      : 'Are you sure you want to activate this account?',
+                                  'Are you sure you want to permanently delete this health worker?',
                                 );
                                 if (confirm == true) {
-                                  final result = await _healthWorkerService
-                                      .setActiveStatus(
-                                        hw['ID'],
-                                        !(hw['is_active'] == true),
-                                      );
+                                  final success = await _healthWorkerService
+                                      .deleteHealthWorker(hw['ID']);
                                   if (context.mounted) {
-                                    final msg =
-                                        result?['message'] ??
-                                        result?['error'] ??
-                                        'Failed';
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(msg)),
+                                      SnackBar(
+                                        content: Text(
+                                          success
+                                              ? 'Deleted successfully'
+                                              : 'Failed to delete health worker',
+                                        ),
+                                      ),
                                     );
+                                    if (success) widget.onBack();
                                   }
-                                  _loadHealthWorkerDetails();
                                 }
                               },
                               isLoading: _isLoading,
                             ),
                           ),
-                          const SizedBox(height: 20),
-                          if (hw['is_active'] == false)
-                            SizedBox(
-                              width: double.infinity,
-                              child: ReusableButtonWidget(
-                                text: 'Delete Health Worker',
-                                backgroundColor: colorScheme.error,
-                                onPressed: () async {
-                                  final confirm = await _showConfirmationDialog(
-                                    context,
-                                    'Are you sure you want to permanently delete this health worker?',
-                                  );
-                                  if (confirm == true) {
-                                    final success = await _healthWorkerService
-                                        .deleteHealthWorker(hw['ID']);
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            success
-                                                ? 'Deleted successfully'
-                                                : 'Failed to delete health worker',
-                                          ),
-                                        ),
-                                      );
-                                      if (success) widget.onBack();
-                                    }
-                                  }
-                                },
-                                isLoading: _isLoading,
-                              ),
-                            ),
-                        ],
-                      ),
+                      ],
                     ),
                   ],
                 ),

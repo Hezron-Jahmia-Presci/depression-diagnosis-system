@@ -32,7 +32,13 @@ class ReusableNavItemWidget extends StatelessWidget {
           title:
               isCompact
                   ? null
-                  : Text(title, style: TextStyle(color: textColor)),
+                  : Text(
+                    title,
+                    style: TextStyle(
+                      color: textColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
           onTap: () => onItemSelected(screen),
           contentPadding: EdgeInsets.symmetric(
             horizontal: isCompact ? 13.0 : 18.0,

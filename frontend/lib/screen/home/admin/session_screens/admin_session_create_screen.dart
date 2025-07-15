@@ -145,7 +145,7 @@ class _AdminCreateSessionScreenState extends State<AdminCreateSessionScreen> {
                   items: _previousSessions,
                   onChanged: (val) => setState(() => _selectedSessionId = val),
                   label: "Select a previous session if any",
-                  listItems: 'first_name',
+                  listItems: 'session_code',
                 ),
                 const SizedBox(height: 16),
 

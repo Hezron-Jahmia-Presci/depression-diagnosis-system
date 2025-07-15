@@ -121,13 +121,7 @@ func (hwh *HealthWorkerHandler) UpdateHealthWorker(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status":  http.StatusOK,
 		"message": "Health worker updated successfully",
-		"health_worker": gin.H{
-			"id":        hw.ID,
-			"firstName": hw.FirstName,
-			"lastName":  hw.LastName,
-			"email":     hw.Email,
-			"role":      hw.Role,
-		},
+		"health_worker":hw,
 	})
 }
 
@@ -220,14 +214,7 @@ func (hwh *HealthWorkerHandler) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login successful",
 		"token":   token,
-		"health_worker": gin.H{
-			"id":         hw.ID,
-			"first_name": hw.FirstName,
-			"last_name":  hw.LastName,
-			"email":      hw.Email,
-			"employeeID": hw.EmployeeID,
-			"role":       hw.Role,
-		},
+		"health_worker": hw,
 	})
 }
 

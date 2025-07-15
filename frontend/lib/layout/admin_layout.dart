@@ -9,7 +9,12 @@ import '../widget/widget_exporter.dart';
 
 class AdminLayout extends StatefulWidget {
   final String title;
-  const AdminLayout({required this.title, super.key});
+  final VoidCallback toggleTheme;
+  const AdminLayout({
+    required this.title,
+    required this.toggleTheme,
+    super.key,
+  });
 
   @override
   State<AdminLayout> createState() => _AdminLayoutState();
@@ -34,11 +39,12 @@ class _AdminLayoutState extends State<AdminLayout> {
   final HealthWorkerService _healthWorkerService = HealthWorkerService();
 
   int _selectedIndex = 0;
-
-  Map<String, dynamic>? _adminDetails;
   bool _isLoading = true;
   bool _hasError = false;
   bool _isFabVisible = true;
+  bool _showingInbox = false;
+
+  Map<String, dynamic>? _adminDetails;
 
   late final List<Widget> _screens;
   late final Map<int, FabConfig> _fabConfigs = {
@@ -370,12 +376,31 @@ class _AdminLayoutState extends State<AdminLayout> {
             ],
           ),
           actions: [
+            IconButton(
+              onPressed: () {
+                setState(() {
+                  _showingInbox = true;
+                });
+              },
+              icon: const Icon(Icons.message_outlined),
+            ),
+
+            SizedBox(width: 13),
+
+            IconButton(
+              icon: const Icon(Icons.brightness_6),
+              onPressed: widget.toggleTheme,
+            ),
+
+            SizedBox(width: 13),
+
             PopupMenuButton(
               onSelected: (value) async {
                 if (value == 'logout') {
                   await _handleLogout();
                 }
               },
+
               itemBuilder:
                   (context) => const [
                     PopupMenuItem(value: 'logout', child: Text('Logout')),
@@ -391,7 +416,14 @@ class _AdminLayoutState extends State<AdminLayout> {
                     floatingActionButton: _buildFAB(),
                     selectedIndex: _selectedIndex,
                     onNavTap: _onNavTap,
-                    screen: _screens[_selectedIndex],
+                    screen:
+                        _showingInbox
+                            ? MessageInboxScreen(
+                              onBack:
+                                  () => setState(() => _showingInbox = false),
+                            )
+                            : _screens[_selectedIndex],
+
                     navigationItems: const [
                       BottomNavigationBarItem(
                         icon: Icon(Icons.dashboard_outlined),
@@ -441,7 +473,13 @@ class _AdminLayoutState extends State<AdminLayout> {
                     ],
                   )
                   : DesktopLayout(
-                    primaryScreen: _screens[_selectedIndex],
+                    primaryScreen:
+                        _showingInbox
+                            ? MessageInboxScreen(
+                              onBack:
+                                  () => setState(() => _showingInbox = false),
+                            )
+                            : _screens[_selectedIndex],
                     sidebar: sidebar,
                     floatingActionButton: _buildFAB(),
                   ),

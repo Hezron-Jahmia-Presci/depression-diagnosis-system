@@ -3,6 +3,7 @@ package database
 import (
 	"depression-diagnosis-system/api/util"
 	"depression-diagnosis-system/database/model"
+	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -15,6 +16,8 @@ func RunAllSeeders() {
 	SeedAdminUser()
 	SeedHealthWorkers()
 	SeedDummyPatients()
+	SeedMessages()
+	SeedPatientSessions()
 }
 
 func SeedDepartments() {
@@ -351,3 +354,163 @@ func SeedDummyPatients() {
 		}
 	}
 }
+
+func SeedMessages() {
+	var healthWorkers []model.HealthWorker
+	// Get all health workers excluding admins, to seed messages between them
+	if err := DB.Where("role = ?", model.RoleHealthWorker).Find(&healthWorkers).Error; err != nil {
+		log.Printf("❌ Failed to load health workers for seeding messages: %v", err)
+		return
+	}
+
+	if len(healthWorkers) < 2 {
+		log.Println("⚠️ Not enough health workers to seed messages")
+		return
+	}
+
+	messages := []string{
+		"Hello, how are you today?",
+		"Can you update me on the patient in room 5?",
+		"Please review the latest lab results when you have time.",
+		"Do you have availability for a case discussion tomorrow?",
+		"Thanks for your support during the last session.",
+		"Could you share the treatment plan document?",
+		"Let's coordinate on the follow-up appointments.",
+		"Have you seen the new hospital guidelines?",
+		"I'm forwarding the patient files for your review.",
+		"Please let me know if you need any assistance.",
+	}
+
+	now := time.Now()
+
+	// We'll create messages between pairs in a simple pattern
+	for i := 0; i < len(healthWorkers)-1; i++ {
+		sender := healthWorkers[i]
+		receiver := healthWorkers[i+1]
+
+		for j, text := range messages {
+			msg := model.Message{
+				SenderID:   sender.ID,
+				ReceiverID: receiver.ID,
+				Message:    text,
+				Timestamp:  now.Add(time.Duration(j) * time.Minute),
+			}
+			if err := DB.Create(&msg).Error; err != nil {
+				log.Printf("❌ Failed to create message from %s to %s: %v", sender.Email, receiver.Email, err)
+			} else {
+				log.Printf("✉️ Message seeded from %s to %s: %s", sender.Email, receiver.Email, text)
+			}
+		}
+	}
+}
+
+func SeedPatientSessions() {
+	var patients []model.Patient
+	var healthWorkers []model.HealthWorker
+	var phq9Questions []model.Phq9Question
+
+	DB.Find(&patients)
+	DB.Where("role = ?", model.RoleHealthWorker).Find(&healthWorkers)
+	DB.Find(&phq9Questions) // Fetch all PHQ-9 questions once
+
+	if len(patients) == 0 || len(healthWorkers) == 0 {
+		log.Println("⚠️ Cannot seed sessions — no patients or health workers found")
+		return
+	}
+
+	statuses := []string{model.SessionCompleted, model.SessionOngoing, model.SessionCancelled}
+	now := time.Now()
+
+	sessionNotesBank := []string{
+		"Patient expressed feelings of hopelessness and fatigue, particularly in the mornings. Discussed coping mechanisms and encouraged journaling.",
+		"Follow-up on medication side effects. Patient reports mild nausea but improved sleep. PHQ-9 shows slight improvement.",
+		"Session focused on emotional triggers tied to childhood trauma. Patient was tearful but engaged. Scheduled next session for trauma-focused therapy.",
+		"Patient missed previous session. Today discussed consequences of skipped appointments. Recommitted to recovery plan.",
+		"Explored patient’s thought patterns related to self-worth. Introduced reframing techniques and tracked negative thoughts.",
+		"Health worker observed signs of restlessness and agitation. Patient admitted to skipping doses. Re-educated on medication compliance.",
+		"Discussed relapse prevention and lifestyle changes. Patient expressed desire to return to school/work and is building a daily routine.",
+		"Session was brief due to patient’s low energy. Still reports suicidal ideation; immediate referral to psychiatrist scheduled.",
+		"Patient reports improved mood after group therapy. Shares experiences openly and is building a support system.",
+		"Addressed family dynamics and support system. Patient’s partner has agreed to attend future sessions.",
+		"Discussed spiritual and cultural interpretations of depression. Health worker validated beliefs while providing clinical guidance.",
+	}
+
+	for _, patient := range patients {
+		numSessions := 6 + time.Now().UnixNano()%5 // between 6 and 10 sessions
+		var prevSession *model.Session
+
+		for i := 0; i < int(numSessions); i++ {
+			worker := healthWorkers[(int(patient.ID)+i)%len(healthWorkers)]
+			sessionDate := now.AddDate(0, 0, -7*i)
+			status := statuses[i%len(statuses)]
+
+			phq9Score := 3 + int((patient.ID*uint(i+1))%24)
+			severity := util.DetermineSeverity(phq9Score)
+			sessionNote := sessionNotesBank[i%len(sessionNotesBank)]
+
+			session := model.Session{
+				SessionCode:               util.GenerateSessionCode("Depression"),
+				HealthWorkerID:            worker.ID,
+				PatientID:                 patient.ID,
+				Date:                      sessionDate,
+				Status:                    status,
+				PatientStateAtRegistration: "Calm and responsive on arrival",
+				SessionIssue:              "Review of depressive symptoms and adjustment of treatment plan",
+				Description:               fmt.Sprintf("Session %d focusing on mental and emotional evaluation", i+1),
+				CurrentPrescription:       "Maintain current regimen unless otherwise advised",
+			}
+
+			if prevSession != nil {
+				session.PreviousSessionID = &prevSession.ID
+			}
+			if status == model.SessionOngoing {
+				nextDate := sessionDate.AddDate(0, 0, 7)
+				session.NextSessionDate = &nextDate
+			}
+
+			if err := DB.Create(&session).Error; err != nil {
+				log.Printf("❌ Failed to create session for %s %s: %v", patient.FirstName, patient.LastName, err)
+				continue
+			}
+
+			diagnosis := model.Diagnosis{
+				SessionID: session.ID,
+				Phq9Score: phq9Score,
+				Severity:  severity,
+			}
+			DB.Create(&diagnosis)
+
+			summary := model.SessionSummary{
+				SessionID: session.ID,
+				Notes:     sessionNote,
+			}
+			DB.Create(&summary)
+
+			// 💡 NEW: Generate PHQ-9 responses per question
+			responses := make([]model.Phq9ResponseStruct, 0, len(phq9Questions))
+			for _, q := range phq9Questions {
+				responses = append(responses, model.Phq9ResponseStruct{
+					QuestionID: q.ID,
+					Response:   int(patient.ID+uint(i)+q.ID)%4, // Simulated score between 0–3
+				})
+			}
+			raw, err := json.Marshal(responses)
+			if err != nil {
+				log.Printf("❌ Failed to marshal PHQ-9 responses for session %s: %v", session.SessionCode, err)
+				continue
+			}
+
+			phq9 := model.Phq9Response{
+				SessionID: session.ID,
+				Responses: raw,
+			}
+			DB.Create(&phq9)
+
+			log.Printf("🧠 %s %s | Session %d | PHQ-9: %d (%s) | Status: %s", patient.FirstName, patient.LastName, i+1, phq9Score, severity, status)
+
+			prevSession = &session
+		}
+	}
+}
+
+

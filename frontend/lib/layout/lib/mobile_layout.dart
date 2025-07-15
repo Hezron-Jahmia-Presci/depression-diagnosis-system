@@ -1,3 +1,4 @@
+import 'package:depression_diagnosis_system/constants/layout_constant.dart';
 import 'package:flutter/material.dart';
 
 class MobileLayout extends StatelessWidget {
@@ -21,11 +22,26 @@ class MobileLayout extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: screen,
+      body: Stack(
+        children: [
+          // Background Image
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.3,
+              child: Image.asset(
+                backgroundImagePath,
+                fit: BoxFit.cover,
+                color: Colors.green,
+                colorBlendMode:
+                    BlendMode.multiply, // or BlendMode.overlay / screen / etc.
+              ),
+            ),
+          ),
+
+          Padding(padding: const EdgeInsets.all(24.0), child: screen),
+        ],
       ),
-      floatingActionButton: this.floatingActionButton,
+      floatingActionButton: floatingActionButton,
       bottomNavigationBar: SizedBox(
         height: 94,
         child: BottomNavigationBar(

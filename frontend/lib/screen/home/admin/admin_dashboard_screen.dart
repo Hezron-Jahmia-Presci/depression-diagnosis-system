@@ -119,81 +119,116 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
     return ListView(
       children: [
-        Wrap(
-          spacing: 16,
-          runSpacing: 16,
-          children: [
-            _buildCard(
-              "Patients",
-              _totalPatients,
-              Icons.person,
-              Colors.deepPurple,
-            ),
-            _buildCard("Sessions", _totalSessions, Icons.event, Colors.teal),
-            _buildCard(
-              "Health Workers",
-              _totalHealthWorkers,
-              Icons.group,
-              Colors.indigo,
-            ),
-            _buildCard(
-              "Departments",
-              _totalDepartments,
-              Icons.apartment,
-              Colors.brown,
-            ),
-            _buildCard(
-              "Medications",
-              _totalMedications,
-              Icons.medication,
-              Colors.green,
-            ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Wrap(
+            spacing: 33,
+            runSpacing: 16,
+            children: [
+              _buildCard(
+                "Patients",
+                _totalPatients,
+                Icons.person,
+                Colors.deepPurple,
+              ),
+              _buildCard("Sessions", _totalSessions, Icons.event, Colors.teal),
+              _buildCard(
+                "Health Workers",
+                _totalHealthWorkers,
+                Icons.group,
+                Colors.indigo,
+              ),
+              _buildCard(
+                "Departments",
+                _totalDepartments,
+                Icons.apartment,
+                Colors.brown,
+              ),
+              _buildCard(
+                "Medications",
+                _totalMedications,
+                Icons.medication,
+                Colors.green,
+              ),
 
-            _buildCard(
-              "Sessions This Week",
-              _weeklySessions,
-              Icons.calendar_view_week,
-              Colors.orange,
-            ),
-            _buildCard(
-              "Sessions This Month",
-              _monthlySessions,
-              Icons.calendar_month,
-              Colors.blue,
-            ),
-          ],
+              _buildCard(
+                "Weekly Sessions",
+                _weeklySessions,
+                Icons.calendar_view_week,
+                Colors.orange,
+              ),
+              _buildCard(
+                "Monthly Sessions",
+                _monthlySessions,
+                Icons.calendar_month,
+                Colors.blue,
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 32),
-        _buildSectionTitle("Recent Admissions"),
-        ..._recentPatients.map(
-          (p) => ListTile(
-            leading: Icon(Icons.person_outline, color: colorScheme.primary),
-            title: Text("${p['first_name']} ${p['last_name']}"),
-            subtitle: Text("Admitted: ${_formatDate(p['admission_date'])}"),
-            trailing: Text(
-              p['patient_code'] ?? "—",
-              style: TextStyle(
-                color: colorScheme.primary,
-                fontWeight: FontWeight.w600,
-              ),
+        Material(
+          borderRadius: BorderRadius.circular(13),
+
+          color: colorScheme.surface.withValues(alpha: 0.8),
+          child: Padding(
+            padding: const EdgeInsets.all(33.0),
+            child: Column(
+              children: [
+                _buildSectionTitle("Recent Admissions"),
+                ..._recentPatients.map(
+                  (p) => ListTile(
+                    leading: Icon(
+                      Icons.person_outline,
+                      color: colorScheme.primary,
+                    ),
+                    title: Text("${p['first_name']} ${p['last_name']}"),
+                    subtitle: Text(
+                      "Admitted: ${_formatDate(p['admission_date'])}",
+                    ),
+                    trailing: Text(
+                      p['patient_code'] ?? "—",
+                      style: TextStyle(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
         const SizedBox(height: 24),
-        _buildSectionTitle("Recent Medication Histories"),
-        ..._recentMedications.map(
-          (m) => ListTile(
-            leading: Icon(Icons.medical_services, color: colorScheme.primary),
-            title: Text(m['prescription'] ?? "Medication"),
-            subtitle: Text(
-              "Patient : ${m['Patient']['first_name'] ?? 'N/A'}  ${m['Patient']['last_name'] ?? 'N/A'}",
-            ),
-            trailing: Text(
-              m['health_center'] ?? "—",
-              style: TextStyle(
-                color: colorScheme.primary,
-                fontWeight: FontWeight.w600,
-              ),
+
+        Material(
+          borderRadius: BorderRadius.circular(13),
+          color: colorScheme.surface.withValues(alpha: 0.8),
+          child: Padding(
+            padding: const EdgeInsets.all(33.0),
+            child: Column(
+              children: [
+                _buildSectionTitle("Recent Medication Histories"),
+                ..._recentMedications.map(
+                  (m) => ListTile(
+                    leading: Icon(
+                      Icons.medical_services,
+                      color: colorScheme.primary,
+                    ),
+                    title: Text(m['prescription'] ?? "Medication"),
+                    subtitle: Text(
+                      "Patient : ${m['Patient']['first_name'] ?? 'N/A'} ${m['Patient']['last_name'] ?? 'N/A'}",
+                    ),
+                    trailing: Text(
+                      m['health_center'] ?? "—",
+                      style: TextStyle(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -208,10 +243,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Widget _buildCard(String title, int count, IconData icon, Color color) {
     return SizedBox(
-      width: MediaQuery.of(context).size.width > 600 ? 260 : double.infinity,
+      width: MediaQuery.of(context).size.width > 600 ? 280 : double.infinity,
       child: ReusableCardWidget(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(24),
           child: Row(
             children: [
               Icon(icon, size: 40, color: color),

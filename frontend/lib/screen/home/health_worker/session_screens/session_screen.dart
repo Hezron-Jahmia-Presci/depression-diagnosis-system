@@ -136,6 +136,7 @@ class SessionScreenState extends State<SessionScreen> {
         Expanded(
           child: ListView.separated(
             itemCount: _filteredSessoins.length,
+            padding: EdgeInsets.symmetric(horizontal: 24.0),
             separatorBuilder: (_, __) => const SizedBox(height: 10),
             itemBuilder: (context, index) {
               final session = _filteredSessoins[index];

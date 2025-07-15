@@ -7,34 +7,36 @@ import 'package:depression_diagnosis_system/service/lib/health_worker_service.da
 import '../screen/screens_exporter.dart';
 import '../widget/widget_exporter.dart';
 
-class AppLayout extends StatefulWidget {
+class NurseLayout extends StatefulWidget {
   final String title;
-  const AppLayout({required this.title, super.key});
+  final VoidCallback toggleTheme;
+  const NurseLayout({
+    required this.title,
+    required this.toggleTheme,
+    super.key,
+  });
 
   @override
-  State<AppLayout> createState() => _AppLayoutState();
+  State<NurseLayout> createState() => _NurseLayoutState();
 }
 
-class _AppLayoutState extends State<AppLayout> {
+class _NurseLayoutState extends State<NurseLayout> {
   final GlobalKey<AdminPatientScreenState> _patientScreenKey =
       GlobalKey<AdminPatientScreenState>();
   final GlobalKey<MedicationHistoryScreenState> _medicationHistoryScreenKey =
       GlobalKey<MedicationHistoryScreenState>();
-  final GlobalKey<AdminSessionScreenState> _sessionScreenKey =
-      GlobalKey<AdminSessionScreenState>();
-  final GlobalKey<Phq9QuestionScreenState> _phq9QuestionScreenKey =
-      GlobalKey<Phq9QuestionScreenState>();
 
   final HealthWorkerService _healthWorkerService = HealthWorkerService();
 
   int _selectedIndex = 0;
-
-  Map<String, dynamic>? _userDetails;
   bool _isLoading = true;
   bool _hasError = false;
   bool _isFabVisible = true;
+  bool _showingInbox = false;
 
-  late List<Widget> _screens;
+  Map<String, dynamic>? _userDetails;
+
+  late final List<Widget> _screens;
   late final Map<int, FabConfig> _fabConfigs = {
     1: FabConfig(
       icon: Icons.add_to_queue_outlined,
@@ -60,17 +62,6 @@ class _AppLayoutState extends State<AppLayout> {
         }
       },
     ),
-    3: FabConfig(
-      icon: Icons.event_note_outlined,
-      label: "Start New Session",
-      onPressed: () async {
-        final didRegister = await _openBottomSheet(const CreateSessionScreen());
-        if (didRegister == true) {
-          await _sessionScreenKey.currentState?.reload();
-          setState(() {});
-        }
-      },
-    ),
   };
 
   @override
@@ -87,27 +78,19 @@ class _AppLayoutState extends State<AppLayout> {
       _hasError = details == null;
 
       _screens = [
-        DashboardScreen(),
-        PatientScreen(
+        NurseDashboardScreen(),
+        AdminPatientScreen(
           key: _patientScreenKey,
           onFabVisibilityChanged:
               (visible) => setState(() => _isFabVisible = visible),
         ),
-        MedicationHistoryScreen(
+        AdminMedicationHistoryScreen(
           key: _medicationHistoryScreenKey,
           onFabVisibilityChanged:
               (visible) => setState(() => _isFabVisible = visible),
         ),
-        SessionScreen(
-          key: _sessionScreenKey,
-          onFabVisibilityChanged:
-              (visible) => setState(() => _isFabVisible = visible),
-        ),
-        Phq9QuestionScreen(
-          key: _phq9QuestionScreenKey,
-          onFabVisibilityChanged:
-              (visible) => setState(() => _isFabVisible = !visible),
-        ),
+        const AdminHealthWorkerScreen(),
+        const AdminDepartmentScreen(),
         HealthWorkerDetailsScreen(
           healthWorkerID: details!['ID'],
           onBack: () => setState(() => _selectedIndex = 0),
@@ -135,12 +118,6 @@ class _AppLayoutState extends State<AppLayout> {
           break;
         case 1:
           _medicationHistoryScreenKey.currentState?.resetToListView();
-          break;
-        case 2:
-          _phq9QuestionScreenKey.currentState;
-          break;
-        case 3:
-          _sessionScreenKey.currentState?.resetToListView();
           break;
       }
       return;
@@ -194,9 +171,9 @@ class _AppLayoutState extends State<AppLayout> {
     final titles = [
       'Dashboard',
       'Patients',
-      'Medication Histories',
-      'Sessions',
-      'PHQ-9 Questions',
+      'Medication History',
+      'Health Workers',
+      'Departments',
       'Profile',
     ];
 
@@ -208,13 +185,13 @@ class _AppLayoutState extends State<AppLayout> {
       userDetails: _userDetails,
       isLoading: _isLoading,
       hasError: _hasError,
-      onProfileTap: () => _onNavTap(4),
+      onProfileTap: () => _onNavTap(5),
       navigationItems: [
         SidebarNavItem(
           index: 0,
           icon: Icons.dashboard_outlined,
           title: 'Dashboard',
-          screen: const DashboardScreen(),
+          screen: const HealthWorkerDashboardScreen(),
         ),
         SidebarNavItem(
           index: 1,
@@ -226,19 +203,19 @@ class _AppLayoutState extends State<AppLayout> {
           index: 2,
           icon: Icons.medication_outlined,
           title: 'Medication Histories',
-          screen: const MedicationHistoryScreen(),
+          screen: const AdminMedicationHistoryScreen(),
         ),
         SidebarNavItem(
           index: 3,
-          icon: Icons.event_note_outlined,
-          title: 'Sessions',
-          screen: const SessionScreen(),
+          icon: Icons.medical_services_outlined,
+          title: 'Health Workers',
+          screen: const AdminHealthWorkerScreen(),
         ),
         SidebarNavItem(
           index: 4,
-          icon: Icons.quiz_outlined,
-          title: 'PHQ-9 Questions',
-          screen: const Phq9QuestionScreen(),
+          icon: Icons.account_tree_outlined,
+          title: 'Departments',
+          screen: const AdminDepartmentScreen(),
         ),
       ],
     );
@@ -262,11 +239,33 @@ class _AppLayoutState extends State<AppLayout> {
               ),
             ],
           ),
+
           actions: [
+            IconButton(
+              onPressed: () {
+                setState(() {
+                  _showingInbox = true;
+                });
+              },
+              icon: const Icon(Icons.message_outlined),
+            ),
+
+            SizedBox(width: 13),
+
+            IconButton(
+              icon: const Icon(Icons.brightness_6),
+              onPressed: widget.toggleTheme,
+            ),
+
+            SizedBox(width: 13),
+
             PopupMenuButton(
               onSelected: (value) async {
-                if (value == 'logout') await _handleLogout();
+                if (value == 'logout') {
+                  await _handleLogout();
+                }
               },
+
               itemBuilder:
                   (context) => const [
                     PopupMenuItem(value: 'logout', child: Text('Logout')),
@@ -282,7 +281,13 @@ class _AppLayoutState extends State<AppLayout> {
                     floatingActionButton: _buildFAB(),
                     selectedIndex: _selectedIndex,
                     onNavTap: _onNavTap,
-                    screen: _screens[_selectedIndex],
+                    screen:
+                        _showingInbox
+                            ? MessageInboxScreen(
+                              onBack:
+                                  () => setState(() => _showingInbox = false),
+                            )
+                            : _screens[_selectedIndex],
                     navigationItems: const [
                       BottomNavigationBarItem(
                         icon: Icon(Icons.dashboard_outlined),
@@ -291,28 +296,39 @@ class _AppLayoutState extends State<AppLayout> {
                       ),
                       BottomNavigationBarItem(
                         icon: Icon(Icons.person_outline),
+                        activeIcon: Icon(Icons.person),
                         label: 'Patients',
                       ),
                       BottomNavigationBarItem(
                         icon: Icon(Icons.medication_outlined),
-                        label: 'Medication',
+                        activeIcon: Icon(Icons.medication),
+                        label: 'Medication Histories',
                       ),
                       BottomNavigationBarItem(
-                        icon: Icon(Icons.event_note_outlined),
-                        label: 'Sessions',
+                        icon: Icon(Icons.medical_services_outlined),
+                        activeIcon: Icon(Icons.medical_services),
+                        label: 'Health Workers',
                       ),
                       BottomNavigationBarItem(
-                        icon: Icon(Icons.quiz_outlined),
-                        label: 'PHQ-9',
+                        icon: Icon(Icons.business_outlined),
+                        activeIcon: Icon(Icons.business),
+                        label: 'Departments',
                       ),
                       BottomNavigationBarItem(
                         icon: Icon(Icons.person_pin_outlined),
+                        activeIcon: Icon(Icons.person_pin_rounded),
                         label: 'Profile',
                       ),
                     ],
                   )
                   : DesktopLayout(
-                    primaryScreen: _screens[_selectedIndex],
+                    primaryScreen:
+                        _showingInbox
+                            ? MessageInboxScreen(
+                              onBack:
+                                  () => setState(() => _showingInbox = false),
+                            )
+                            : _screens[_selectedIndex],
                     sidebar: sidebar,
                     floatingActionButton: _buildFAB(),
                   ),

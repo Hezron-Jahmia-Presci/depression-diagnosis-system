@@ -69,7 +69,6 @@ class _AdminHealthWorkerRegisterScreenState
   Future<void> _loadPersonnelTypes() async {
     try {
       final types = await _personnelTypeService.getAllPersonnelTypes();
-      print(types);
       setState(() {
         _personnelTypes = types.cast<Map<String, dynamic>>();
       });

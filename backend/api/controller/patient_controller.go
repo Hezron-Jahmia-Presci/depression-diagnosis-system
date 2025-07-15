@@ -54,6 +54,8 @@ func (pc *PatientController) GetAllPatients() ([]model.Patient, error) {
 		Preload("Department").
 		Preload("AdmittedBy").
 		Preload("MedicationHistories.PrescribingDoctor").
+		Preload("Sessions.HealthWorker").
+		Preload("Sessions.SessionSummary").
 		Find(&patients).Error; err != nil {
 		return nil, err
 	}
@@ -67,6 +69,8 @@ func (pc *PatientController) GetPatientByID(id uint) (*model.Patient, error) {
 		Preload("Department").
 		Preload("AdmittedBy").
 		Preload("MedicationHistories.PrescribingDoctor").
+		Preload("Sessions.HealthWorker").
+		Preload("Sessions.SessionSummary").
 		First(&patient, id).Error; err != nil {
 		return nil, err
 	}
@@ -80,6 +84,8 @@ func (pc *PatientController) GetPatientsByHealthWorker(healthWorkerID uint) ([]m
 		Preload("Department").
 		Preload("AdmittedBy").
 		Preload("MedicationHistories.PrescribingDoctor").
+	  	Preload("Sessions.HealthWorker").
+		Preload("Sessions.SessionSummary").
 		Where("admitted_by_id = ?", healthWorkerID).
 		Find(&patients).Error; err != nil {
 		return nil, err
@@ -94,6 +100,8 @@ func (pc *PatientController) GetPatientByHealthWorker(healthWorkerID, patientID 
 		Preload("Department").
 		Preload("AdmittedBy").
 		Preload("MedicationHistories.PrescribingDoctor").
+		Preload("Sessions.HealthWorker").
+		Preload("Sessions.SessionSummary").
 		Where("admitted_by_id = ?", healthWorkerID).
 		First(&patient, patientID).Error; err != nil {
 		return nil, err
@@ -108,6 +116,8 @@ func (pc *PatientController) GetPatientsByDepartment(departmentID uint) ([]model
 		Preload("Department").
 		Preload("AdmittedBy").
 		Preload("MedicationHistories.PrescribingDoctor").
+		Preload("Sessions.HealthWorker").
+		Preload("Sessions.SessionSummary").
 		Where("department_id = ?", departmentID).
 		Find(&patients).Error; err != nil {
 		return nil, err
@@ -197,7 +207,12 @@ func (pc *PatientController) SetActiveStatus(id uint, active bool) (*model.Patie
 
 func (pc *PatientController) SearchPatients(queryParams map[string]string) ([]model.Patient, error) {
     var patients []model.Patient
-	dbQuery := database.DB.Preload("Department").Preload("AdmittedBy").Preload("MedicationHistories.PrescribingDoctor")
+	dbQuery := database.DB.
+	Preload("Department").
+	Preload("AdmittedBy").
+	Preload("MedicationHistories.PrescribingDoctor").
+	Preload("Sessions.HealthWorker").
+	Preload("Sessions.SessionSummary")
 
 
 	if name, ok := queryParams["name"]; ok && name != "" {

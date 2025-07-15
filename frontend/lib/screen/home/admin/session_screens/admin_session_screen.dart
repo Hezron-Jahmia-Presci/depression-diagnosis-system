@@ -129,7 +129,7 @@ class AdminSessionScreenState extends State<AdminSessionScreen> {
       children: [
         ReusableSearchBarWidget(
           controller: _searchController,
-          label: 'Search by session code, health worker name, or patient name',
+          label: 'Search by session code',
         ),
 
         SizedBox(height: 55),
@@ -137,6 +137,7 @@ class AdminSessionScreenState extends State<AdminSessionScreen> {
         Expanded(
           child: ListView.separated(
             itemCount: _filteredSessoins.length,
+            padding: EdgeInsets.symmetric(horizontal: 24.0),
             separatorBuilder: (_, __) => const SizedBox(height: 10),
             itemBuilder: (context, index) {
               final session = _filteredSessoins[index];

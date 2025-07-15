@@ -6,14 +6,16 @@ import 'package:depression_diagnosis_system/service/lib/patient_service.dart';
 
 import '../../../widget/widget_exporter.dart';
 
-class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+class HealthWorkerDashboardScreen extends StatefulWidget {
+  const HealthWorkerDashboardScreen({super.key});
 
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
+  State<HealthWorkerDashboardScreen> createState() =>
+      _HealthWorkerDashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _HealthWorkerDashboardScreenState
+    extends State<HealthWorkerDashboardScreen> {
   final _sessionService = SessionService();
   final _patientService = PatientService();
 
@@ -118,9 +120,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     return ListView(
+      padding: EdgeInsets.symmetric(horizontal: 24.0),
       children: [
         Wrap(
-          spacing: 16,
+          spacing: 24,
           runSpacing: 16,
           children: [
             _buildSummaryCard(
@@ -169,10 +172,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     Color color,
   ) {
     return SizedBox(
-      width: MediaQuery.of(context).size.width > 600 ? 260 : double.infinity,
+      width: MediaQuery.of(context).size.width > 600 ? 280 : double.infinity,
       child: ReusableCardWidget(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(24.0),
           child: Row(
             children: [
               Icon(icon, size: 40, color: color),
@@ -279,7 +282,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   barWidth: 3,
                   belowBarData: BarAreaData(
                     show: true,
-                    color: colorScheme.primary.withOpacity(0.2),
+                    color: colorScheme.primary.withValues(alpha: 0.2),
                   ),
                   dotData: FlDotData(show: true),
                 ),

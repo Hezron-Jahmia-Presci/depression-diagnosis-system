@@ -1,43 +1,72 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:flutter/material.dart';
 
+import 'package:depression_diagnosis_system/service/lib/theme_service.dart';
 import 'screen/auth/login_home_screen.dart' show LoginHomeScreen;
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final isDarkMode = await ThemeService().isDarkMode();
+  runApp(MyApp(isDarkMode: isDarkMode));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MyApp extends StatefulWidget {
+  final bool isDarkMode;
+  const MyApp({super.key, required this.isDarkMode});
+
+  @override
+  State<MyApp> createState() => MyAppState();
+}
+
+class MyAppState extends State<MyApp> {
+  late bool _isDarkMode;
+  final ThemeService _themeService = ThemeService();
 
   static const Color _seedColor = Colors.greenAccent;
-  static const bool _isDarkMode = false;
 
-  static ColorScheme lightColorScheme = ColorScheme.fromSeed(
-    seedColor: _seedColor,
-    brightness: Brightness.light,
-  );
+  static ColorScheme _getColorScheme(bool isDark) {
+    return ColorScheme.fromSeed(
+      seedColor: _seedColor,
+      brightness: isDark ? Brightness.dark : Brightness.light,
+    );
+  }
 
-  static ColorScheme darkColorScheme = ColorScheme.fromSeed(
-    seedColor: _seedColor,
-    brightness: Brightness.dark,
-  );
+  @override
+  void initState() {
+    super.initState();
+    _isDarkMode = widget.isDarkMode;
+  }
 
-  // This widget is the root of your application.
+  void _toggleTheme() async {
+    setState(() => _isDarkMode = !_isDarkMode);
+    await _themeService.setDarkMode(_isDarkMode);
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
-      routes: {'/loginHome': (context) => LoginHomeScreen()},
       debugShowCheckedModeBanner: false,
-
-      theme: ThemeData(useMaterial3: true, colorScheme: MyApp.lightColorScheme),
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: _getColorScheme(false),
+        fontFamily: 'SFPro',
+      ),
       darkTheme: ThemeData(
         useMaterial3: true,
-        colorScheme: MyApp.darkColorScheme,
+        colorScheme: _getColorScheme(true),
+        fontFamily: 'SFPro',
       ),
-      themeMode: MyApp._isDarkMode ? ThemeMode.dark : ThemeMode.light,
-      home: const SplashScreen(),
+      themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      onGenerateRoute: (settings) {
+        if (settings.name == '/loginHome') {
+          return MaterialPageRoute(
+            builder: (context) => LoginHomeScreen(toggleTheme: _toggleTheme),
+          );
+        }
+        return null;
+      },
+      home: SplashScreen(), // No toggle passed here
     );
   }
 }

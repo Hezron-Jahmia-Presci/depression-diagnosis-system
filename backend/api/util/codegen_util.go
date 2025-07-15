@@ -1,39 +1,40 @@
 package util
 
 import (
+	cryptorand "crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"math/rand"
 	"strings"
 )
 
-// GeneratePatientCode generates a unique patient code using the department name and a random or sequential number.
-// Example: "Depression" -> "DEP-8371"
+// GeneratePatientCode generates a unique patient code using department name and a random 4-digit number.
 func GeneratePatientCode(departmentName string) string {
-	// Get first 3 uppercase letters from the department name
 	prefix := strings.ToUpper(departmentName)
 	if len(prefix) > 3 {
 		prefix = prefix[:3]
 	}
-
-	// Append a random 4-digit number (can change to timestamp or sequential from DB if needed)
-	suffix := rand.Intn(9000) + 1000 // Ensures 4-digit number
+	suffix := rand.Intn(9000) + 1000
 	return fmt.Sprintf("%s-%d", prefix, suffix)
 }
 
-// GenerateSessionCode creates a session code based on department name.
-// Example: "Depression" → "DEP-S-7482"
+// GenerateSessionCode creates a short unique session code like "DEP-S-c7c1c134".
 func GenerateSessionCode(departmentName string) string {
 	prefix := strings.ToUpper(departmentName)
 	if len(prefix) > 3 {
 		prefix = prefix[:3]
 	}
 
-	suffix := rand.Intn(9000) + 1000 // random 4-digit number
+	randomBytes := make([]byte, 4) // 4 bytes = 8 hex characters
+	if _, err := cryptorand.Read(randomBytes); err != nil {
+		panic("failed to generate session code: " + err.Error())
+	}
+	suffix := hex.EncodeToString(randomBytes)
 
-	return fmt.Sprintf("%s-S-%d", prefix, suffix)
+	return fmt.Sprintf("%s-S-%s", prefix, suffix)
 }
 
-// GenerateEmployeeID creates a unique employee ID e.g. DEP-EMP-9283
+// GenerateEmployeeID creates a unique employee ID like "DEP-EMP-9283"
 func GenerateEmployeeID(departmentName string) string {
 	prefix := strings.ToUpper(departmentName)
 	if len(prefix) > 3 {
@@ -42,4 +43,3 @@ func GenerateEmployeeID(departmentName string) string {
 	suffix := rand.Intn(9000) + 1000
 	return fmt.Sprintf("%s-EMP-%d", prefix, suffix)
 }
-

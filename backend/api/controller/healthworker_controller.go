@@ -49,7 +49,10 @@ func (c *HealthWorkerController) CreateHealthWorker(hw *model.HealthWorker) (*mo
 // GetHealthWorkerByID retrieves a single health worker by ID
 func (c *HealthWorkerController) GetHealthWorkerByID(id uint) (*model.HealthWorker, error) {
 	var hw model.HealthWorker
-	if err := database.DB.Preload("Department").Preload("PersonnelType").Preload("Supervisor").
+	if err := database.DB.
+	Preload("Department").
+	Preload("PersonnelType").
+	Preload("Supervisor").
 		First(&hw, id).Error; err != nil {
 		return nil, err
 	}
@@ -59,7 +62,10 @@ func (c *HealthWorkerController) GetHealthWorkerByID(id uint) (*model.HealthWork
 // GetAllHealthWorkers fetches all registered health workers
 func (c *HealthWorkerController) GetAllHealthWorkers() ([]model.HealthWorker, error) {
 	var workers []model.HealthWorker
-	if err := database.DB.Preload("Department").Preload("PersonnelType").Preload("Supervisor").
+	if err := database.DB.
+	Preload("Department").
+	Preload("PersonnelType").
+	Preload("Supervisor").
 		Find(&workers).Error; err != nil {
 		return nil, err
 	}
@@ -69,7 +75,11 @@ func (c *HealthWorkerController) GetAllHealthWorkers() ([]model.HealthWorker, er
 // UpdateHealthWorker updates the profile of a health worker
 func (c *HealthWorkerController) UpdateHealthWorker(id uint, updated *model.HealthWorker) (*model.HealthWorker, error) {
 	var hw model.HealthWorker
-	if err := database.DB.First(&hw, id).Error; err != nil {
+	if err := database.DB.
+	Preload("Department").
+	Preload("PersonnelType").
+	Preload("Supervisor").
+	First(&hw, id).Error; err != nil {
 		return nil, err
 	}
 
@@ -114,7 +124,9 @@ func (c *HealthWorkerController) DeleteHealthWorker(id uint) error {
 func (c *HealthWorkerController) GetHealthWorkersByDepartment(departmentID uint) ([]model.HealthWorker, error) {
 	var workers []model.HealthWorker
 	if err := database.DB.
-		Preload("Department").Preload("PersonnelType").
+		Preload("Department").
+		Preload("PersonnelType").
+		Preload("Supervisor").
 		Where("department_id = ?", departmentID).Find(&workers).Error; err != nil {
 		return nil, err
 	}
@@ -124,7 +136,11 @@ func (c *HealthWorkerController) GetHealthWorkersByDepartment(departmentID uint)
 // GetHealthWorkerByEmail retrieves a health worker by email
 func (c *HealthWorkerController) GetHealthWorkerByEmail(email string) (*model.HealthWorker, error) {
 	var hw model.HealthWorker
-	if err := database.DB.Where("email = ?", email).First(&hw).Error; err != nil {
+	if err := database.DB.
+	Preload("Department").
+	Preload("PersonnelType").
+	Preload("Supervisor").
+	Where("email = ?", email).First(&hw).Error; err != nil {
 		return nil, err
 	}
 	return &hw, nil
@@ -150,7 +166,11 @@ func (c *HealthWorkerController) SetActiveStatus(id uint, active bool) (*model.H
 func (c *HealthWorkerController) Login(identifier string, password string) (*model.HealthWorker, error) {
 	var hw model.HealthWorker
 
-	query := database.DB.Where("email = ?", identifier)
+	query := database.DB.
+	Preload("Department").
+	Preload("PersonnelType").
+	Preload("Supervisor").
+	Where("email = ?", identifier)
 	if strings.Contains(identifier, "-EMP-") {
 		query = database.DB.Where("employee_id = ?", identifier)
 	}
@@ -181,7 +201,10 @@ func (c *HealthWorkerController) SearchHealthWorkers(
     queryParams map[string]string,
 ) ([]model.HealthWorker, error) {
     var workers []model.HealthWorker
-    dbQuery := database.DB.Preload("Department").Preload("PersonnelType").Preload("Supervisor")
+    dbQuery := database.DB.
+	Preload("Department").
+	Preload("PersonnelType").
+	Preload("Supervisor")
 
     if name, ok := queryParams["name"]; ok && name != "" {
         likePattern := "%" + name + "%"
