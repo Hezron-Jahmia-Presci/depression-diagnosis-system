@@ -29,6 +29,7 @@ type Patient struct {
 	AdmittedBy        HealthWorker `gorm:"foreignKey:AdmittedByID"`
 
 	MedicationHistories []MedicationHistory `gorm:"foreignKey:PatientID" json:"medication_histories"`
+	Sessions            []Session           `gorm:"foreignKey:PatientID" json:"sessions"` 
 
 	IsActive bool `gorm:"default:true" json:"is_active"`
 

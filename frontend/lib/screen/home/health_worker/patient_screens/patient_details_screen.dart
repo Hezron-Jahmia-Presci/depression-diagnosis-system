@@ -23,6 +23,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
 
   Map<String, dynamic>? _patientDetails;
   List<dynamic> _medicationHistories = [];
+  List<dynamic> _sessions = [];
 
   bool _isLoading = true;
   bool _hasError = false;
@@ -37,9 +38,12 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
   Future<void> _fetchPatientDetails() async {
     try {
       final details = await _patientService.getPatientByID(widget.patientID);
+      print(details);
       setState(() {
         _patientDetails = details;
         _medicationHistories = details?['medication_histories'] ?? [];
+        _sessions = details?['sessions'] ?? [];
+
         _hasError = details == null;
         _isLoading = false;
       });
@@ -133,6 +137,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
             children: [
               // Left: Avatar & Button
               Expanded(
+                flex: 2,
                 child: ListView(
                   padding: EdgeInsets.symmetric(horizontal: 33.0),
                   children: [
@@ -219,12 +224,12 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                           SizedBox(
                             width: double.infinity,
                             child: ReusableButtonWidget(
-                              text: 'Delete Health Worker',
+                              text: 'Delete Patient',
                               backgroundColor: colorScheme.error,
                               onPressed: () async {
                                 final confirm = await _showConfirmationDialog(
                                   context,
-                                  'Are you sure you want to permanently delete this health worker?',
+                                  'Are you sure you want to permanently delete this patient?',
                                 );
                                 if (confirm == true) {
                                   final success = await _patientService
@@ -235,7 +240,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                                         content: Text(
                                           success
                                               ? 'Deleted successfully'
-                                              : 'Failed to delete health worker',
+                                              : 'Failed to delete patient',
                                         ),
                                       ),
                                     );
@@ -251,6 +256,50 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
 
                     const SizedBox(height: 55),
 
+                    _buildDetailTile('Email', patient['email']),
+                    _buildDetailTile('Contact', patient['contact']),
+                    _buildDetailTile('Address', patient['address']),
+                    _buildDetailTile('Gender', patient['gender']),
+                    _buildDetailTile(
+                      'Date of Birth',
+                      formatDate(patient['date_of_birth']),
+                    ),
+                    _buildDetailTile('National ID', patient['national_id']),
+                    _buildDetailTile(
+                      'Patient Description',
+                      patient['description'],
+                    ),
+                    _buildDetailTile(
+                      'Admission Date',
+                      formatDate(patient['admission_date']),
+                    ),
+                    _buildDetailTile(
+                      'Department',
+                      patient['department']?['name'],
+                    ),
+                    _buildDetailTile(
+                      'Admitted By',
+                      patient['admitted_by'] != null
+                          ? '${patient['admitted_by']['first_name']} ${patient['admitted_by']['last_name']}'
+                          : null,
+                    ),
+
+                    _buildDetailTile(
+                      'Previous Diagnosis',
+                      patient['previous_diagnosis'],
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(width: 34),
+
+              // Right: Patient Details
+              Expanded(
+                flex: 3,
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(horizontal: 33),
+                  children: [
                     const Text(
                       'Medication History',
                       style: TextStyle(
@@ -292,49 +341,51 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                         ),
                       ),
                     ),
-                  ],
-                ),
-              ),
 
-              const SizedBox(width: 34),
+                    const SizedBox(height: 30),
+                    const Text(
+                      'Sessions',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
 
-              // Right: Patient Details
-              Expanded(
-                flex: 2,
-                child: ListView(
-                  padding: const EdgeInsets.symmetric(horizontal: 33),
-                  children: [
-                    _buildDetailTile('Email', patient['email']),
-                    _buildDetailTile('Contact', patient['contact']),
-                    _buildDetailTile('Address', patient['address']),
-                    _buildDetailTile('Gender', patient['gender']),
-                    _buildDetailTile(
-                      'Date of Birth',
-                      formatDate(patient['date_of_birth']),
-                    ),
-                    _buildDetailTile('National ID', patient['national_id']),
-                    _buildDetailTile(
-                      'Patient Description',
-                      patient['description'],
-                    ),
-                    _buildDetailTile(
-                      'Admission Date',
-                      formatDate(patient['admission_date']),
-                    ),
-                    _buildDetailTile(
-                      'Department',
-                      patient['department']?['name'],
-                    ),
-                    _buildDetailTile(
-                      'Admitted By',
-                      patient['admitted_by'] != null
-                          ? '${patient['admitted_by']['first_name']} ${patient['admitted_by']['last_name']}'
-                          : null,
-                    ),
-
-                    _buildDetailTile(
-                      'Previous Diagnosis',
-                      patient['previous_diagnosis'],
+                    ..._sessions.map(
+                      (session) => ReusableCardWidget(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Session on ${formatDate(session['date'])}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            _buildDetailLine('Status', session['status']),
+                            _buildDetailLine(
+                              'Patient State',
+                              session['patient_state'],
+                            ),
+                            _buildDetailLine('Issue', session['session_issue']),
+                            _buildDetailLine(
+                              'Notes',
+                              session['SessionSummary']?['notes'],
+                            ),
+                            _buildDetailLine(
+                              'Prescription',
+                              session['current_prescription'],
+                            ),
+                            if (session['health_worker'] != null)
+                              _buildDetailLine(
+                                'Handled By',
+                                '${session['health_worker']['first_name']} ${session['health_worker']['last_name']}',
+                              ),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                 ),

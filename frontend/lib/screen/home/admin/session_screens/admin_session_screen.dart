@@ -129,7 +129,7 @@ class AdminSessionScreenState extends State<AdminSessionScreen> {
       children: [
         ReusableSearchBarWidget(
           controller: _searchController,
-          label: 'Search by session code, health worker name, or patient name',
+          label: 'Search by session code',
         ),
 
         SizedBox(height: 55),
