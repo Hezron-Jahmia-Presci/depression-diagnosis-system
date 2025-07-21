@@ -1,8 +1,13 @@
+import 'dart:io';
 import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:depression_diagnosis_system/service/lib/theme_service.dart';
 import 'screen/auth/login_home_screen.dart' show LoginHomeScreen;
+
+void startServer() async {
+  await Process.start('server.exe', []);
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
