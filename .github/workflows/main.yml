@@ -1,0 +1,51 @@
+name: Build & Package Flutter + Go
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'   # Only runs on version tags like v1.0.0
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: 🐦 Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.0' # Use your version
+
+      - name: 📦 Get Flutter dependencies
+        run: flutter pub get
+        working-directory: frontend
+
+      - name: 🖥️ Build Flutter for Windows
+        run: flutter build windows --release
+        working-directory: frontend
+
+      - name: ⚙️ Build Go Backend
+        run: go build -o server.exe
+        working-directory: backend
+
+      - name: 📁 Bundle App
+        run: |
+          mkdir package
+          copy backend\server.exe package\
+          xcopy frontend\build\windows\runner\Release\* package\ /E /I /Y
+          powershell Compress-Archive -Path package\* -DestinationPath dds_package.zip
+
+      - name: ⬆️ Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dds-windows-package
+          path: dds_package.zip
