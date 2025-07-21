@@ -2,11 +2,9 @@ package database
 
 import (
 	"depression-diagnosis-system/database/model"
-	"fmt"
 	"log"
-	"os"
 
-	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -14,22 +12,13 @@ var DB *gorm.DB
 var err error
 
 func Conn() {
-	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
-		os.Getenv("DB_HOST"),
-		os.Getenv("DB_USER"),
-		os.Getenv("DB_PASSWORD"),
-		os.Getenv("DB_NAME"),
-		os.Getenv("DB_PORT"),
-	)
-
-	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	// Open (or create) SQLite database file
+	DB, err = gorm.Open(sqlite.Open("dds_sqlite.db"), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("❌ Failed to connect to database: %v\n", err)
+		log.Fatalf("❌ Failed to connect to SQLite database: %v\n", err)
 	} else {
-		log.Println("✅ Database connection successful")
+		log.Println("✅ SQLite database connection successful")
 	}
-
 }
 
 func DBMigrate() {
@@ -45,13 +34,9 @@ func DBMigrate() {
 		&model.Phq9Response{},
 		&model.SessionSummary{},
 		&model.Message{},
-		); err != nil {
+	); err != nil {
 		log.Fatalf("❌ Error migrating database: %v\n", err)
 	} else {
 		log.Println("✅ Database migration successful")
 	}
 }
-
-
-
-

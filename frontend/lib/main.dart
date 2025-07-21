@@ -6,7 +6,7 @@ import 'package:depression_diagnosis_system/service/lib/theme_service.dart';
 import 'screen/auth/login_home_screen.dart' show LoginHomeScreen;
 
 void startServer() async {
-  await Process.start('server.exe', []);
+  await Process.start('server.exe', [], runInShell: true);
 }
 
 void main() async {

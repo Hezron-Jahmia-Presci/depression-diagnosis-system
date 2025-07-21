@@ -7,7 +7,7 @@ run:
 	go run cmd/server/main.go
 
 build:
-	go build -o server.exe cmd/server/main.go
+	go build -ldflags -H=windowsgui -o server.exe cmd/server/main.go
 
 docker-up:
 	docker-compose up --build -d
